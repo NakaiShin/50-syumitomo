@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://humanlink1239.github.io/50-syumitomo/sitemap.xml
