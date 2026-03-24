@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>趣味友 - 大人の趣味コミュニティ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+</head>
+<body class="bg-[#FCFBF9] font-sans text-gray-800 flex flex-col min-h-screen" id="app">
+  <!-- JavaScriptによってここにアプリが描画されます -->
+
+  <script>
+    // --- モックデータ ---
+    const CATEGORIES = [
+      { id: 'walking', name: '街歩き', icon: 'compass', color: 'bg-blue-100 text-blue-700' },
+      { id: 'museum', name: '美術館巡り', icon: 'palette', color: 'bg-purple-100 text-purple-700' },
+      { id: 'food', name: '食べ歩き', icon: 'coffee', color: 'bg-orange-100 text-orange-700' },
+      { id: 'history', name: '歴史散策', icon: 'camera', color: 'bg-emerald-100 text-emerald-700' },
+    ];
+
+    const CATEGORY_DEFAULT_IMAGES = {
+      walking: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&q=80&w=800&h=500',
+      museum: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?auto=format&fit=crop&q=80&w=800&h=500',
+      food: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800&h=500',
+      history: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800&h=500',
+    };
+
+    const AREAS = ['東京', '神奈川', '千葉', '埼玉', 'その他'];
+
+    const AVAILABLE_TAGS = [
+      '初めての方歓迎', 'お一人様歓迎', 'ゆったりペース', '美しい自然風景',
+      '美味しい食事付き', '写真撮影おすすめ', '雨天決行', '現地集合・解散'
+    ];
+
+    const MOCK_USERS = [
+      { id: 'u1', name: 'サトウ', email: 'sato@example.com', password: 'password', bio: '鎌倉の歴史が好きです。休日はよく神社仏閣巡りをしています。', avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150&h=150', following: [], followers: ['u2'] },
+      { id: 'u2', name: 'ミホ', email: 'miho@example.com', password: 'password', bio: '美術館巡りが趣味です。特に印象派の絵画が好きです。', avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150', following: ['u1'], followers: [] },
+      { id: 'u3', name: 'タカハシ', email: 'taka@example.com', password: 'password', bio: '美味しいものを食べるのが大好きです！下町によく出没します。', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150', following: [], followers: [] },
+    ];
+
+    const INITIAL_EVENTS = [
+      {
+        id: 'e1', title: '鎌倉・古都の歴史散策と秋の味覚ランチ', categoryId: 'history', area: '神奈川',
+        date: '2026-11-15', time: '10:00 - 15:00', location: '神奈川県 鎌倉市', meetingPlace: 'JR鎌倉駅 東口改札前',
+        fee: '3,000円（ランチ代込み）', capacity: 8, participants: 5, organizerId: 'u1',
+        description: '鎌倉の主要な歴史スポットをゆっくりとしたペースで歩いて巡ります。お昼は地元の食材を使った和食ランチを予定しています。歩きやすい靴でお越しください。',
+        schedule: '10:00 鎌倉駅集合\n10:30 鶴岡八幡宮\n12:30 和食ランチ\n14:00 小町通り散策\n15:00 現地解散',
+        belongings: '歩きやすい靴、飲み物、雨具', notes: '少雨決行ですが、荒天の場合は前日に中止のご連絡をします。',
+        tags: ['初めての方歓迎', 'ゆったりペース', '美味しい食事付き'],
+        imageUrl: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800&h=500',
+      },
+      {
+        id: 'e2', title: '上野の森美術館で印象派展を鑑賞する会', categoryId: 'museum', area: '東京',
+        date: '2026-11-20', time: '13:00 - 16:00', location: '東京都 台東区', meetingPlace: '上野の森美術館 入口前',
+        fee: '2,500円（チケット代実費）', capacity: 6, participants: 6, organizerId: 'u2',
+        description: '開催中の印象派展を一緒に鑑賞しませんか？鑑賞後は近くのカフェで感想を語り合いましょう。美術の知識は必要ありません、純粋に楽しむ会です。',
+        schedule: '13:00 美術館入口集合\n13:10 鑑賞開始\n15:00 カフェで休憩・歓談\n16:00 解散',
+        belongings: '特になし', notes: 'チケットは各自で事前購入をお願いします。',
+        tags: ['お一人様歓迎', '雨天決行', '現地集合・解散'],
+        imageUrl: 'https://images.unsplash.com/photo-1518998053901-53149022716c?auto=format&fit=crop&q=80&w=800&h=500',
+      },
+      {
+        id: 'e3', title: '浅草・下町情緒あふれる食べ歩き', categoryId: 'food', area: '東京',
+        date: '2026-11-28', time: '11:00 - 14:00', location: '東京都 台東区', meetingPlace: '雷門前',
+        fee: '各自実費（2,000円程度）', capacity: 10, participants: 2, organizerId: 'u3',
+        description: '浅草の仲見世通り周辺で、昔ながらのおやつやグルメを少しずつ楽しみましょう。人形焼やメンチカツなど、おすすめのお店をご案内します。',
+        schedule: '11:00 雷門集合\n11:15 食べ歩き開始\n13:30 浅草寺参拝\n14:00 解散',
+        belongings: 'ウェットティッシュがあると便利です', notes: '食べ歩きのマナーを守って楽しみましょう。',
+        tags: ['初めての方歓迎', '写真撮影おすすめ'],
+        imageUrl: 'https://images.unsplash.com/photo-1545569341-9eb8b46d7c1d?auto=format&fit=crop&q=80&w=800&h=500',
+      }
+    ];
+
+    const MOCK_MESSAGES = [
+      { id: 1, sender: 'organizer', name: '主催者', text: '皆様、ご参加ありがとうございます！当日はよろしくお願いします。', time: '11/01 10:00' },
+      { id: 2, sender: 'participant', name: 'ヨシダ', text: '初参加です。お手柔らかにお願いします。', time: '11/02 14:30' },
+    ];
+
+    // --- ヘルパー関数 ---
+    function eHTML(str) {
+      if (str == null) return '';
+      return String(str).replace(/[&<>"']/g, match => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[match]);
+    }
+
+    // --- アプリケーションロジック ---
+    window.app = {
+      state: {
+        currentPage: 'top',
+        currentEventId: null,
+        targetUserId: null,
+        currentUser: null,
+        users: JSON.parse(JSON.stringify(MOCK_USERS)),
+        events: JSON.parse(JSON.stringify(INITIAL_EVENTS)),
+        myApplications: [],
+        surveys: [],
+        searchParams: { area: '', date: '', categoryId: '', tags: [] },
+        isLoginMode: true,
+        authError: '',
+        chatMessages: JSON.parse(JSON.stringify(MOCK_MESSAGES)),
+        createForm: { title: '', categoryId: 'walking', area: '東京', date: '', time: '', location: '', meetingPlace: '', fee: '', capacity: 6, description: '', schedule: '', belongings: '', notes: '', tags: [], customImageUrl: '' },
+        isEditingProfile: false,
+      },
+
+      render() {
+        document.getElementById('app').innerHTML = this.buildHTML();
+        lucide.createIcons();
+        if (this.state.currentPage === 'chat') {
+          const c = document.getElementById('chat-messages');
+          if (c) c.scrollTop = c.scrollHeight;
+        }
+      },
+
+      navigate(page, id = null) {
+        this.state.currentPage = page;
+        if (page === 'detail' || page === 'apply' || page === 'chat') this.state.currentEventId = id;
+        if (page === 'profile') this.state.targetUserId = id;
+        window.scrollTo(0, 0);
+        this.render();
+      },
+
+      authNavigate(page, id = null) {
+        if (this.state.currentUser) this.navigate(page, id);
+        else this.navigate('auth');
+      },
+
+      // --- アクションハンドラ ---
+      toggleSearchTag(tag) {
+        const tags = this.state.searchParams.tags;
+        const idx = tags.indexOf(tag);
+        if (idx > -1) tags.splice(idx, 1); else tags.push(tag);
+        this.render();
+      },
+
+      updateSearch(key, val) {
+        this.state.searchParams[key] = val;
+        this.render();
+      },
+
+      resetSearch() {
+        this.state.searchParams = { area: '', date: '', categoryId: '', tags: [] };
+        this.render();
+      },
+
+      handleAuthSubmit(e) {
+        if (e) e.preventDefault();
+        this.state.authError = '';
+        
+        const email = document.getElementById('auth_email').value;
+        const password = document.getElementById('auth_password').value;
+        
+        if (this.state.isLoginMode) {
+          const user = this.state.users.find(u => u.email === email && u.password === password);
+          if (user) {
+            this.state.currentUser = user;
+            this.navigate('top');
+          } else {
+            this.state.authError = 'メールアドレスまたはパスワードが違います。';
+            this.render();
+          }
+        } else {
+          const name = document.getElementById('auth_name').value;
+          const survey = document.getElementById('auth_survey').value;
+          const newUser = {
+            id: 'u_' + Date.now(), name, email, password, bio: 'よろしくお願いします！',
+            avatarUrl: 'https://images.unsplash.com/photo-1544168190-79c154273140?auto=format&fit=crop&q=80&w=150&h=150', // 初期画像
+            following: [], followers: []
+          };
+          this.state.users.push(newUser);
+          this.state.currentUser = newUser;
+          this.state.surveys.push({ userId: newUser.id, answer: survey, date: new Date().toISOString() });
+          this.navigate('top');
+        }
+      },
+
+      handleLogout() {
+        this.state.currentUser = null;
+        this.navigate('top');
+      },
+
+      handleApplySubmit(e) {
+        e.preventDefault();
+        const eventId = this.state.currentEventId;
+        this.state.myApplications.push(eventId);
+        const ev = this.state.events.find(e => e.id === eventId);
+        if(ev) ev.participants++;
+        this.navigate('chat', eventId);
+      },
+
+      handleChatSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text) return;
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+        this.state.chatMessages.push({ id: Date.now(), sender: 'me', name: '自分', text, time: timeStr });
+        this.render();
+      },
+
+      toggleFollow(targetId) {
+        if (!this.state.currentUser) return;
+        const cu = this.state.currentUser;
+        const isFollowing = cu.following.includes(targetId);
+        if (isFollowing) cu.following = cu.following.filter(id => id !== targetId);
+        else cu.following.push(targetId);
+        
+        const tu = this.state.users.find(u => u.id === targetId);
+        if (tu) {
+          if (isFollowing) tu.followers = tu.followers.filter(id => id !== cu.id);
+          else tu.followers.push(cu.id);
+        }
+        this.render();
+      },
+
+      backupCreateForm() {
+        const ids = ['title', 'categoryId', 'area', 'date', 'time', 'location', 'customImageUrl', 'capacity', 'fee', 'meetingPlace', 'description', 'schedule', 'belongings', 'notes'];
+        ids.forEach(id => {
+          const el = document.getElementById('cf_' + id);
+          if (el) this.state.createForm[id] = el.value;
+        });
+      },
+
+      toggleCreateTag(tag) {
+        this.backupCreateForm();
+        const tags = this.state.createForm.tags;
+        const idx = tags.indexOf(tag);
+        if(idx > -1) tags.splice(idx, 1); else tags.push(tag);
+        this.render();
+      },
+
+      handleCreateSubmit(e) {
+        e.preventDefault();
+        this.backupCreateForm();
+        const f = this.state.createForm;
+        const finalImageUrl = f.customImageUrl.trim() || CATEGORY_DEFAULT_IMAGES[f.categoryId];
+        
+        const newEvent = {
+          ...f,
+          id: 'e_' + Date.now(),
+          participants: 1,
+          organizerId: this.state.currentUser.id,
+          imageUrl: finalImageUrl
+        };
+        this.state.events.unshift(newEvent);
+        this.state.myApplications.push(newEvent.id);
+        
+        // フォームリセット
+        this.state.createForm = { title: '', categoryId: 'walking', area: '東京', date: '', time: '', location: '', meetingPlace: '', fee: '', capacity: 6, description: '', schedule: '', belongings: '', notes: '', tags: [], customImageUrl: '' };
+        this.navigate('detail', newEvent.id);
+      },
+
+      handleProfileSubmit() {
+        const name = document.getElementById('pe_name').value;
+        const bio = document.getElementById('pe_bio').value;
+        const avatarUrl = document.getElementById('pe_avatarUrl').value;
+        
+        this.state.currentUser.name = name;
+        this.state.currentUser.bio = bio;
+        this.state.currentUser.avatarUrl = avatarUrl;
+        
+        const user = this.state.users.find(u => u.id === this.state.currentUser.id);
+        if (user) { user.name = name; user.bio = bio; user.avatarUrl = avatarUrl; }
+        
+        this.state.isEditingProfile = false;
+        this.render();
+      },
+
+      // --- ビューの構築 ---
+      buildHTML() {
+        return `
+          ${this.state.currentPage !== 'chat' ? this.renderHeader() : ''}
+          <main class="flex-1">${this.renderPage()}</main>
+          ${this.state.currentPage !== 'chat' ? this.renderFooter() : ''}
+        `;
+      },
+
+      renderHeader() {
+        const userBtn = this.state.currentUser 
+          ? `<button onclick="app.navigate('mypage')" class="flex items-center text-[#E67E22] font-bold bg-orange-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-100 transition-colors text-sm md:text-base"><i data-lucide="user" class="w-4 h-4 mr-1 md:mr-2"></i> マイページ</button>`
+          : `<button onclick="app.navigate('auth')" class="text-[#E67E22] font-bold border border-[#E67E22] px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-50 text-sm md:text-base">ログイン / 登録</button>`;
+
+        return `
+          <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+            <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div class="flex items-center cursor-pointer" onclick="app.navigate('top')">
+                <div class="w-8 h-8 bg-[#4A5D4E] rounded flex items-center justify-center mr-2">
+                  <i data-lucide="users" class="text-white w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-bold text-[#2C3E50] tracking-wider">趣味友</span>
+              </div>
+              <nav class="hidden md:flex space-x-6 items-center">
+                <button onclick="app.navigate('top')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">イベントを探す</button>
+                <button onclick="app.authNavigate('create')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">イベントを作る</button>
+                ${userBtn}
+              </nav>
+              <div class="md:hidden flex items-center">${userBtn}</div>
+            </div>
+          </header>
+        `;
+      },
+
+      renderFooter() {
+        return `
+          <footer class="bg-[#2C3E50] text-gray-300 py-8 mt-auto">
+            <div class="max-w-6xl mx-auto px-4 text-center">
+              <p class="mb-4 font-bold text-white text-lg">大人の趣味コミュニティ 趣味友</p>
+              <p class="text-xs text-gray-500">&copy; 2026 Shumitomo. All rights reserved.</p>
+            </div>
+          </footer>
+        `;
+      },
+
+      renderPage() {
+        switch (this.state.currentPage) {
+          case 'top': return this.renderTopPage();
+          case 'detail': return this.renderEventDetail();
+          case 'apply': return this.renderEventApplication();
+          case 'chat': return this.renderEventChat();
+          case 'create': return this.renderEventCreate();
+          case 'auth': return this.renderAuthPage();
+          case 'mypage': return this.renderProfileSection(this.state.currentUser, true);
+          case 'profile': 
+            const u = this.state.users.find(u => u.id === this.state.targetUserId);
+            return this.renderProfileSection(u, false);
+          default: return this.renderTopPage();
+        }
+      },
+
+      renderTopPage() {
+        const s = this.state.searchParams;
+        const filteredEvents = this.state.events.filter(e => {
+          if (s.area && e.area !== s.area) return false;
+          if (s.categoryId && e.categoryId !== s.categoryId) return false;
+          if (s.date && e.date < s.date) return false;
+          if (s.tags.length > 0 && !s.tags.some(tag => e.tags.includes(tag))) return false;
+          return true;
+        }).sort((a, b) => {
+          const isAFollowed = this.state.currentUser?.following.includes(a.organizerId) ? 1 : 0;
+          const isBFollowed = this.state.currentUser?.following.includes(b.organizerId) ? 1 : 0;
+          if (isAFollowed !== isBFollowed) return isBFollowed - isAFollowed;
+          return new Date(a.date) - new Date(b.date);
+        });
+
+        const eventCards = filteredEvents.map(event => {
+          const cat = CATEGORIES.find(c => c.id === event.categoryId);
+          const org = this.state.users.find(u => u.id === event.organizerId);
+          const isFull = event.participants >= event.capacity;
+          const isFollowed = this.state.currentUser?.following.includes(event.organizerId);
+
+          return `
+            <div onclick="app.navigate('detail', '${event.id}')" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col md:flex-row relative">
+              ${isFollowed ? `<div class="absolute top-0 right-0 bg-[#E67E22] text-white px-4 py-1 rounded-bl-xl font-bold text-sm z-10 shadow-sm flex items-center"><i data-lucide="heart" class="w-4 h-4 mr-1 fill-current"></i> フォロー中の主催者</div>` : ''}
+              <div class="md:w-1/3 h-48 md:h-auto relative">
+                <img src="${event.imageUrl}" alt="${eHTML(event.title)}" class="w-full h-full object-cover" />
+                <div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-gray-800 shadow-sm">${cat?.name || ''}</div>
+              </div>
+              <div class="p-6 md:w-2/3 flex flex-col justify-between">
+                <div>
+                  <h4 class="text-xl font-bold text-gray-800 mb-3 leading-tight pr-24">${eHTML(event.title)}</h4>
+                  <div class="mb-4">
+                    ${event.tags.map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}
+                  </div>
+                  <div class="space-y-2 text-gray-600 mb-4">
+                    <div class="flex items-center"><i data-lucide="calendar" class="w-5 h-5 mr-3 text-[#4A5D4E]"></i><span class="text-lg">${event.date} ${event.time}</span></div>
+                    <div class="flex items-center"><i data-lucide="map-pin" class="w-5 h-5 mr-3 text-[#4A5D4E]"></i><span class="text-lg">${eHTML(event.location)}</span></div>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+                  <div class="flex items-center text-gray-600">
+                    <img src="${org?.avatarUrl || 'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full mr-2 object-cover" />
+                    <span class="text-sm mr-4 truncate max-w-[100px]">${eHTML(org?.name)}</span>
+                    <i data-lucide="users" class="w-5 h-5 mr-1"></i><span class="text-md">${event.participants} / ${event.capacity}名</span>
+                  </div>
+                  <div>
+                    ${isFull ? `<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold">満員</span>` : `<span class="text-[#E67E22] font-bold flex items-center">詳細を見る <i data-lucide="chevron-left" class="w-5 h-5 rotate-180"></i></span>`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="pb-16">
+            <section class="bg-[#4A5D4E] text-white py-12 px-6 mb-8 text-center relative overflow-hidden">
+              <div class="relative z-10 max-w-2xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">共通の趣味で、<br class="md:hidden" />新しいつながりを。</h2>
+                <p class="text-lg md:text-xl opacity-90 mb-8">50代からの、心おだやかな趣味コミュニティ</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                   <button onclick="document.getElementById('search-panel').scrollIntoView({ behavior: 'smooth' })" class="font-bold rounded-lg transition-colors duration-200 flex items-center justify-center text-lg py-3 px-6 bg-[#E67E22] text-white hover:bg-[#d67118]"><i data-lucide="search" class="w-5 h-5 mr-2"></i> イベントを探す</button>
+                   <button onclick="app.authNavigate('create')" class="font-bold rounded-lg transition-colors duration-200 flex items-center justify-center text-lg py-3 px-6 border-2 border-white text-white hover:bg-white hover:text-[#4A5D4E]"><i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> 新規イベントを作る</button>
+                </div>
+              </div>
+            </section>
+
+            <div class="max-w-4xl mx-auto px-4">
+              <section id="search-panel" class="mb-10 bg-[#f9f8f6] rounded-2xl p-6 md:p-8 border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                  <h3 class="text-2xl font-bold text-gray-800 flex items-center"><i data-lucide="filter" class="w-6 h-6 mr-2 text-[#4A5D4E]"></i> 条件を絞り込む</h3>
+                  <button onclick="app.resetSearch()" class="text-sm font-bold text-gray-500 hover:text-gray-800 underline">条件をクリア</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <label class="block font-bold text-gray-700 mb-2">エリア</label>
+                    <select onchange="app.updateSearch('area', this.value)" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#E67E22] outline-none bg-white">
+                      <option value="">すべてのエリア</option>
+                      ${AREAS.map(area => `<option value="${area}" ${s.area === area ? 'selected' : ''}>${area}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-gray-700 mb-2">カテゴリ</label>
+                    <select onchange="app.updateSearch('categoryId', this.value)" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#E67E22] outline-none bg-white">
+                      <option value="">すべてのカテゴリ</option>
+                      ${CATEGORIES.map(cat => `<option value="${cat.id}" ${s.categoryId === cat.id ? 'selected' : ''}>${cat.name}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-gray-700 mb-2">日程（これ以降）</label>
+                    <input type="date" onchange="app.updateSearch('date', this.value)" value="${s.date}" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#E67E22] outline-none bg-white text-gray-700" />
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-bold text-gray-700 mb-3">こだわり条件（タグ）</label>
+                  <div class="flex flex-wrap gap-2">
+                    ${AVAILABLE_TAGS.map(tag => {
+                      const sel = s.tags.includes(tag);
+                      return `<button onclick="app.toggleSearchTag('${tag}')" class="px-4 py-2 rounded-full border text-sm font-bold transition-colors ${sel ? 'bg-[#E67E22] border-[#E67E22] text-white shadow-inner' : 'bg-white border-gray-300 text-gray-600 hover:bg-orange-50'}">${tag}</button>`;
+                    }).join('')}
+                  </div>
+                </div>
+              </section>
+
+              <section id="event-list">
+                <div class="flex items-center justify-between mb-6 border-b-2 border-gray-100 pb-2">
+                  <h3 class="text-2xl font-bold text-gray-800 flex items-center"><span class="w-2 h-6 bg-[#4A5D4E] rounded-full mr-3"></span>開催予定のイベント</h3>
+                  <span class="font-bold text-[#E67E22] text-lg bg-orange-50 px-3 py-1 rounded-lg">${filteredEvents.length} 件</span>
+                </div>
+                ${filteredEvents.length === 0 
+                  ? `<div class="bg-white rounded-xl p-12 text-center border border-gray-200"><i data-lucide="search" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i><p class="text-xl font-bold text-gray-600">条件に一致するイベントがありません。</p></div>`
+                  : `<div class="space-y-6">${eventCards}</div>`
+                }
+              </section>
+            </div>
+          </div>
+        `;
+      },
+
+      renderAuthPage() {
+        const isLogin = this.state.isLoginMode;
+        const inputClass = "w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#E67E22] outline-none mb-4";
+        return `
+          <div class="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 bg-[#FCFBF9]">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 w-full max-w-md">
+              <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center border-b-2 border-[#4A5D4E] pb-3">${isLogin ? 'ログイン' : '新規会員登録'}</h2>
+              ${this.state.authError ? `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold">${this.state.authError}</div>` : ''}
+              <form onsubmit="event.preventDefault(); app.handleAuthSubmit(event)">
+                ${!isLogin ? `<label class="block font-bold text-gray-700 mb-2">ユーザー名</label><input id="auth_name" required type="text" class="${inputClass}" placeholder="例：ヤマダ">` : ''}
+                <label class="block font-bold text-gray-700 mb-2">メールアドレス</label>
+                <input id="auth_email" required type="email" class="${inputClass}" placeholder="mail@example.com">
+                <label class="block font-bold text-gray-700 mb-2">パスワード</label>
+                <input id="auth_password" required type="password" class="${inputClass}" placeholder="英数字8文字以上">
+                
+                ${!isLogin ? `
+                  <label class="block font-bold text-gray-700 mb-2 mt-4">アンケート</label>
+                  <p class="text-sm text-gray-500 mb-2">当サイトをどこでお知りになりましたか？</p>
+                  <select id="auth_survey" required class="${inputClass} bg-white">
+                    <option value="">選択してください</option>
+                    <option value="search">検索エンジン</option><option value="friend">知人の紹介</option><option value="sns">SNS</option><option value="other">その他</option>
+                  </select>
+                ` : ''}
+                <button type="submit" class="w-full font-bold rounded-lg transition-colors duration-200 flex items-center justify-center text-lg py-3 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] mt-4">${isLogin ? 'ログインする' : '登録してはじめる'}</button>
+              </form>
+              <div class="mt-6 text-center">
+                <button onclick="app.state.isLoginMode = ${!isLogin}; app.state.authError = ''; app.render()" class="text-[#4A5D4E] font-bold hover:underline">${isLogin ? '新規会員登録はこちら' : '既にアカウントをお持ちの方はこちら（ログイン）'}</button>
+              </div>
+              ${isLogin ? `
+              <div class="mt-8 pt-4 border-t border-gray-100 text-sm text-gray-500 text-center">
+                <p>※お試し用アカウント</p>
+                <p>sato@example.com / password</p>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      },
+
+      renderEventDetail() {
+        const event = this.state.events.find(e => e.id === this.state.currentEventId);
+        if (!event) return '';
+        const cat = CATEGORIES.find(c => c.id === event.categoryId);
+        const org = this.state.users.find(u => u.id === event.organizerId);
+        const isFull = event.participants >= event.capacity;
+        const isApplied = this.state.myApplications.includes(event.id);
+
+        let actionBtn = '';
+        if (isApplied) {
+          actionBtn = `<button onclick="app.authNavigate('chat', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#4A5D4E] text-white hover:bg-[#3d4d40] shadow-lg flex items-center justify-center text-xl"><i data-lucide="message-circle" class="w-6 h-6 mr-2"></i> 参加者チャットへ</button>`;
+        } else if (isFull) {
+          actionBtn = `<button disabled class="w-full font-bold rounded-lg py-4 px-6 bg-gray-300 text-gray-600 cursor-not-allowed opacity-70">定員に達しました</button>`;
+        } else {
+          actionBtn = `<button onclick="app.authNavigate('apply', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-lg text-xl">このイベントに参加する</button>`;
+        }
+
+        return `
+          <div class="pb-24 max-w-3xl mx-auto">
+            <div class="p-4 sticky top-0 bg-[#FCFBF9]/90 backdrop-blur z-10">
+              <button onclick="app.navigate('top')" class="flex items-center text-[#4A5D4E] font-bold text-lg hover:underline py-2"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> イベント一覧へ戻る</button>
+            </div>
+            <div class="bg-white rounded-t-2xl shadow-sm overflow-hidden">
+              <img src="${event.imageUrl}" class="w-full h-64 md:h-80 object-cover" />
+              <div class="p-6 md:p-8">
+                <div class="flex flex-wrap items-center gap-2 mb-4"><span class="bg-emerald-50 text-[#4A5D4E] px-4 py-1 rounded-full font-bold">${cat?.name}</span></div>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 leading-relaxed">${eHTML(event.title)}</h2>
+                <div class="mb-6 border-b border-gray-100 pb-6">
+                  ${event.tags.map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}
+                </div>
+                <div class="bg-[#f9f8f6] rounded-xl p-6 mb-8 space-y-4 text-lg">
+                  <div class="flex"><i data-lucide="calendar" class="w-6 h-6 text-[#4A5D4E] mr-4 mt-1"></i><div><p class="text-gray-500 text-sm mb-1">日時</p><p class="font-bold text-gray-800">${event.date} ${event.time}</p></div></div>
+                  <div class="flex"><i data-lucide="map-pin" class="w-6 h-6 text-[#4A5D4E] mr-4 mt-1"></i><div><p class="text-gray-500 text-sm mb-1">集合場所</p><p class="font-bold text-gray-800">${eHTML(event.meetingPlace)}</p></div></div>
+                  <div class="flex"><span class="w-6 text-center font-bold text-[#4A5D4E] mr-4 mt-1">¥</span><div><p class="text-gray-500 text-sm mb-1">参加費</p><p class="font-bold text-gray-800">${eHTML(event.fee)}</p></div></div>
+                  <div class="flex"><i data-lucide="users" class="w-6 h-6 text-[#4A5D4E] mr-4 mt-1"></i><div><p class="text-gray-500 text-sm mb-1">参加状況</p><p class="font-bold text-gray-800">現在 ${event.participants}名参加 / 定員 ${event.capacity}名</p></div></div>
+                </div>
+                <div class="space-y-8">
+                  <section><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">イベントの内容</h3><p class="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">${eHTML(event.description)}</p></section>
+                  <section><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">当日の流れ</h3><div class="bg-white border border-gray-200 rounded-xl p-5"><p class="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">${eHTML(event.schedule)}</p></div></section>
+                  <section class="grid md:grid-cols-2 gap-8">
+                     <div><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">持ち物</h3><p class="text-gray-700 text-lg">${eHTML(event.belongings)}</p></div>
+                     <div>
+                        <h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">主催者</h3>
+                        <div onclick="app.authNavigate('profile', '${org.id}')" class="flex items-center p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-gray-200">
+                          <img src="${org?.avatarUrl || 'https://via.placeholder.com/150'}" class="w-14 h-14 rounded-full mr-4 object-cover border border-gray-200" />
+                          <div><span class="text-lg font-bold text-gray-800 block">${eHTML(org?.name)}</span><span class="text-sm text-[#E67E22] font-bold">プロフィールを見る</span></div>
+                        </div>
+                     </div>
+                  </section>
+                  <section class="bg-red-50 rounded-xl p-5 border border-red-100">
+                     <h3 class="text-lg font-bold text-red-800 flex items-center mb-2"><i data-lucide="info" class="w-5 h-5 mr-2"></i> ご注意・お願い</h3><p class="text-red-700">${eHTML(event.notes)}</p>
+                  </section>
+                </div>
+              </div>
+            </div>
+            <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+              <div class="max-w-3xl mx-auto flex items-center justify-between">
+                <div class="hidden sm:block"><p class="text-sm text-gray-500">参加費</p><p class="font-bold text-xl text-gray-800">${eHTML(event.fee)}</p></div>
+                <div class="w-full sm:w-auto flex-1 sm:flex-none sm:ml-6">${actionBtn}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      renderEventApplication() {
+        const event = this.state.events.find(e => e.id === this.state.currentEventId);
+        return `
+          <div class="pb-16 max-w-2xl mx-auto px-4 mt-6">
+            <button onclick="app.navigate('detail', '${event.id}')" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> イベント詳細に戻る</button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-[#4A5D4E] pb-2 inline-block">参加お申し込み</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 flex items-center">
+              <img src="${event.imageUrl}" class="w-16 h-16 rounded-lg object-cover mr-4" />
+              <div><p class="text-sm text-[#4A5D4E] font-bold">${event.date}</p><p class="font-bold text-gray-800 line-clamp-1">${eHTML(event.title)}</p></div>
+            </div>
+            <form onsubmit="app.handleApplySubmit(event)" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 space-y-8">
+              <div>
+                <label class="block text-lg font-bold text-gray-800 mb-2">主催者へのメッセージ（任意）</label>
+                <textarea rows="4" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#E67E22] outline-none" placeholder="例：初めての参加で少し緊張していますが、よろしくお願いします。"></textarea>
+              </div>
+              <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                 <h4 class="font-bold text-gray-800 mb-3">ご参加の前にご確認ください</h4>
+                 <ul class="list-disc list-inside text-gray-600 space-y-2 mb-6">
+                    <li>体調不良の場合は無理をせず、キャンセルのご連絡をお願いします。</li>
+                    <li>営業目的や宗教等の勧誘活動は固くお断りいたします。</li>
+                    <li>他の参加者が不快に感じる言動はお控えください。</li>
+                 </ul>
+                 <label class="flex items-center cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <input type="checkbox" required onchange="document.getElementById('applySubmitBtn').disabled = !this.checked" class="w-6 h-6 text-[#E67E22] rounded border-gray-300 focus:ring-[#E67E22]">
+                  <span class="ml-3 text-lg font-bold text-gray-800 select-none">注意事項に同意して申し込む</span>
+                </label>
+              </div>
+              <div class="pt-4">
+                <button id="applySubmitBtn" type="submit" disabled class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] disabled:bg-gray-400 disabled:opacity-70 shadow-md text-xl">申し込む（参加者限定チャットへ）</button>
+              </div>
+            </form>
+          </div>
+        `;
+      },
+
+      renderEventChat() {
+        const event = this.state.events.find(e => e.id === this.state.currentEventId);
+        const msgs = this.state.chatMessages.map(msg => {
+          const isMe = msg.sender === 'me';
+          const isOrg = msg.sender === 'organizer';
+          return `
+            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+              <div class="flex items-baseline mb-1"><span class="text-sm font-bold text-gray-600 mr-2">${eHTML(msg.name)}</span><span class="text-xs text-gray-400">${msg.time}</span></div>
+              <div class="max-w-[80%] p-4 rounded-2xl text-lg ${isMe ? 'bg-[#E67E22] text-white rounded-tr-none' : isOrg ? 'bg-[#4A5D4E] text-white rounded-tl-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}">${eHTML(msg.text)}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="flex flex-col h-[100vh] max-w-3xl mx-auto bg-gray-50">
+            <div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center shadow-sm z-10 shrink-0">
+               <button onclick="app.navigate('detail', '${event.id}')" class="p-2 -ml-2 text-gray-500 hover:text-gray-800"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+               <div class="ml-2 flex-1 min-w-0">
+                 <div class="flex items-center text-xs font-bold text-[#E67E22] mb-1"><span class="bg-[#E67E22] text-white px-2 py-0.5 rounded mr-2">参加者限定</span></div>
+                 <h2 class="text-lg font-bold text-gray-800 truncate">${eHTML(event.title)}</h2>
+               </div>
+            </div>
+            <div class="bg-emerald-50 border-b border-emerald-100 p-3 shrink-0 flex items-start text-sm">
+               <i data-lucide="info" class="w-5 h-5 text-[#4A5D4E] mr-2 shrink-0 mt-0.5"></i>
+               <p class="text-gray-700">主催者からのお知らせ: 当日は<span class="font-bold">「${eHTML(event.meetingPlace)}」</span>に直接お集まりください。</p>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+              <div class="text-center text-sm text-gray-400 my-4">チャットが開始されました</div>
+              ${msgs}
+            </div>
+            <div class="bg-white border-t border-gray-200 p-4 shrink-0 pb-safe">
+              <form onsubmit="app.handleChatSubmit(event)" class="flex items-end gap-2">
+                <textarea id="chatInput" oninput="document.getElementById('chatSubmitBtn').disabled = !this.value.trim()" class="flex-1 max-h-32 min-h-[52px] p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E67E22] outline-none resize-none text-lg" placeholder="メッセージを入力..." rows="1" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); app.handleChatSubmit(event);}"></textarea>
+                <button id="chatSubmitBtn" type="submit" disabled class="w-12 h-12 flex-shrink-0 bg-[#4A5D4E] text-white rounded-full flex items-center justify-center disabled:opacity-50"><i data-lucide="send" class="w-5 h-5 ml-1"></i></button>
+              </form>
+            </div>
+          </div>
+        `;
+      },
+
+      renderEventCreate() {
+        const f = this.state.createForm;
+        const inputClass = "w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#4A5D4E] outline-none bg-white";
+        const labelClass = "block text-lg font-bold text-[#2C3E50] mb-2 mt-6";
+
+        return `
+          <div class="pb-24 max-w-2xl mx-auto px-4 mt-6">
+            <button onclick="app.navigate('top')" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> トップへ戻る</button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2 border-b-4 border-[#E67E22] pb-2 inline-block">新規イベントを作成する</h2>
+            <p class="text-gray-600 mb-8">趣味の合う仲間を募集しましょう。</p>
+
+            <form onsubmit="app.handleCreateSubmit(event)" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+              <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mb-4">1. イベントの基本情報</h3>
+              
+              <label class="${labelClass}">イベントタイトル <span class="text-red-500 text-sm ml-2">必須</span></label>
+              <input id="cf_title" required type="text" class="${inputClass}" placeholder="例：秋の鎌倉・お寺巡りと精進料理ランチ" value="${eHTML(f.title)}">
+
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="${labelClass}">カテゴリ</label><select id="cf_categoryId" class="${inputClass}">${CATEGORIES.map(c => `<option value="${c.id}" ${f.categoryId===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
+                <div><label class="${labelClass}">エリア</label><select id="cf_area" class="${inputClass}">${AREAS.map(a => `<option value="${a}" ${f.area===a?'selected':''}>${a}</option>`).join('')}</select></div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="${labelClass}">開催日 <span class="text-red-500 text-sm ml-2">必須</span></label><input id="cf_date" required type="date" class="${inputClass}" value="${f.date}"></div>
+                <div><label class="${labelClass}">時間</label><input id="cf_time" type="text" class="${inputClass}" placeholder="例：10:00 - 14:00" value="${eHTML(f.time)}"></div>
+              </div>
+              <label class="${labelClass}">詳細な場所</label>
+              <input id="cf_location" type="text" class="${inputClass}" placeholder="例：神奈川県 鎌倉市" value="${eHTML(f.location)}">
+
+              <label class="${labelClass}">メイン画像（任意）</label>
+              <p class="text-gray-500 text-sm mb-2 flex items-center"><i data-lucide="image" class="w-4 h-4 mr-1"></i> 空欄時はカテゴリに合った画像が自動で割り当てられます。</p>
+              <input id="cf_customImageUrl" type="url" class="${inputClass}" placeholder="https://..." value="${eHTML(f.customImageUrl)}">
+
+              <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mt-10 mb-4">2. 募集とアピールポイント</h3>
+              <label class="${labelClass}">アピールタグ</label>
+              <div class="flex flex-wrap gap-2">
+                ${AVAILABLE_TAGS.map(tag => {
+                  const s = f.tags.includes(tag);
+                  return `<button type="button" onclick="app.toggleCreateTag('${tag}')" class="px-4 py-2 rounded-full border text-sm font-bold transition-colors ${s ? 'bg-[#E67E22] border-[#E67E22] text-white' : 'bg-white border-gray-300 text-gray-600 hover:bg-orange-50'}">${s ? `<i data-lucide="check-circle" class="w-4 h-4 inline mr-1 -ml-1"></i>` : ''}${tag}</button>`;
+                }).join('')}
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="${labelClass}">定員</label><div class="flex items-center"><input id="cf_capacity" type="number" min="2" class="${inputClass} w-24 mr-2 text-center" value="${f.capacity}"><span class="text-lg">名</span></div></div>
+                <div><label class="${labelClass}">参加費</label><input id="cf_fee" type="text" class="${inputClass}" placeholder="例：各自実費" value="${eHTML(f.fee)}"></div>
+              </div>
+              <label class="${labelClass}">集合場所</label>
+              <input id="cf_meetingPlace" type="text" class="${inputClass}" placeholder="例：JR鎌倉駅 東口改札前" value="${eHTML(f.meetingPlace)}">
+
+              <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mt-10 mb-4">3. イベントの詳細内容</h3>
+              <label class="${labelClass}">説明・見どころ</label><textarea id="cf_description" rows="4" class="${inputClass}">${eHTML(f.description)}</textarea>
+              <label class="${labelClass}">当日のスケジュール</label><textarea id="cf_schedule" rows="4" class="${inputClass}">${eHTML(f.schedule)}</textarea>
+              <label class="${labelClass}">持ち物</label><input id="cf_belongings" type="text" class="${inputClass}" value="${eHTML(f.belongings)}">
+              <label class="${labelClass}">注意事項</label><input id="cf_notes" type="text" class="${inputClass}" value="${eHTML(f.notes)}">
+
+              <div class="pt-10">
+                <button type="submit" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-md text-xl">イベントを公開する</button>
+              </div>
+            </form>
+          </div>
+        `;
+      },
+
+      renderProfileSection(user, isMyPage) {
+        if (!user) return '';
+        const isEditing = this.state.isEditingProfile;
+        const upcomingEvents = this.state.events.filter(e => new Date(e.date) >= new Date() && (this.state.myApplications.includes(e.id) || e.organizerId === user.id));
+        const pastEvents = this.state.events.filter(e => new Date(e.date) < new Date() && (this.state.myApplications.includes(e.id) || e.organizerId === user.id));
+        const isFollowing = this.state.currentUser?.following.includes(user.id);
+
+        let userHtml = '';
+        if (isEditing) {
+          userHtml = `
+            <div class="space-y-4 w-full">
+              <div><label class="text-xs font-bold text-gray-500 block mb-1">ユーザー名 *</label><input id="pe_name" required type="text" class="w-full p-3 border border-gray-300 rounded-lg font-bold text-gray-800 focus:ring-2 focus:ring-[#E67E22] outline-none bg-white" value="${eHTML(user.name)}"></div>
+              <div><label class="text-xs font-bold text-gray-500 block mb-1">自己紹介</label><textarea id="pe_bio" rows="4" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-[#E67E22] outline-none bg-white">${eHTML(user.bio)}</textarea></div>
+              <div class="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
+                <button onclick="app.handleProfileSubmit()" class="font-bold rounded-lg py-2 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] text-sm">保存する</button>
+                <button onclick="app.state.isEditingProfile=false; app.render()" class="font-bold rounded-lg py-2 px-6 border-2 border-[#4A5D4E] text-[#4A5D4E] hover:bg-slate-50 text-sm">キャンセル</button>
+              </div>
+            </div>
+          `;
+        } else {
+          userHtml = `
+            <div class="w-full">
+              <h2 class="text-2xl font-bold text-gray-800 mb-2">${eHTML(user.name)}</h2>
+              <div class="flex justify-center md:justify-start gap-6 text-gray-600 mb-4 font-bold"><span>フォロー <span class="text-xl text-gray-800">${user.following.length}</span></span><span>フォロワー <span class="text-xl text-gray-800">${user.followers.length}</span></span></div>
+              <p class="text-gray-700 whitespace-pre-wrap">${eHTML(user.bio)}</p>
+              ${isMyPage ? `<div class="mt-5"><button onclick="app.state.isEditingProfile=true; app.render()" class="flex items-center mx-auto md:mx-0 text-[#4A5D4E] font-bold text-sm bg-emerald-50 px-4 py-2 rounded-full hover:bg-emerald-100 transition-colors"><i data-lucide="edit" class="w-4 h-4 mr-1"></i> プロフィールを編集</button></div>` 
+                         : `<div class="mt-6"><button onclick="app.toggleFollow('${user.id}')" class="font-bold rounded-lg py-3 px-8 flex items-center justify-center text-lg ${isFollowing ? 'border-2 border-gray-300 text-gray-600 hover:bg-gray-100' : 'bg-[#E67E22] text-white hover:bg-[#d67118]'}"><i data-lucide="heart" class="w-5 h-5 mr-2 ${isFollowing ? 'fill-gray-400 text-gray-400' : ''}"></i> ${isFollowing ? 'フォロー中' : 'フォローする'}</button></div>`}
+            </div>
+          `;
+        }
+
+        const renderEventList = (eventsList, noText) => eventsList.length > 0 ? `<div class="space-y-4 mb-8">` + eventsList.map(ev => `
+          <div class="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4">
+            ${noText.includes('予定') ? `<div class="w-16 h-16 bg-emerald-50 rounded-lg flex flex-col items-center justify-center text-[#4A5D4E] shrink-0"><span class="text-xs font-bold">${ev.date.split('-')[1]}月</span><span class="text-xl font-bold leading-none">${ev.date.split('-')[2]}</span></div>`
+                                     : `<img src="${ev.imageUrl}" class="w-16 h-16 rounded-lg object-cover shrink-0" />`}
+            <div class="flex-1 min-w-0"><p class="font-bold text-gray-800 truncate">${eHTML(ev.title)}</p><p class="text-sm text-gray-500 truncate">${ev.date}</p></div>
+          </div>`).join('') + `</div>` : `<p class="text-gray-500 mb-8">${noText}</p>`;
+
+        return `
+          <div class="max-w-3xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 relative">
+              ${isMyPage && !isEditing ? `<button onclick="app.handleLogout()" class="absolute top-6 right-6 text-gray-500 hover:text-red-500 flex items-center text-sm font-bold"><i data-lucide="log-out" class="w-4 h-4 mr-1"></i> ログアウト</button>` : ''}
+              <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div class="shrink-0 flex flex-col items-center w-full md:w-auto">
+                  <img src="${user.avatarUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-100" />
+                  ${isEditing ? `<div class="mt-4 w-full max-w-[200px]"><label class="text-xs font-bold text-gray-500 block mb-1">画像URL</label><input id="pe_avatarUrl" type="text" class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E67E22] outline-none bg-white" value="${eHTML(user.avatarUrl)}"></div>` : ''}
+                </div>
+                ${userHtml}
+              </div>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">参加予定のイベント</h3>
+            ${renderEventList(upcomingEvents, '参加予定のイベントはありません。')}
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">参加したイベント履歴</h3>
+            <div class="opacity-75">${renderEventList(pastEvents, '過去に参加したイベントはありません。')}</div>
+          </div>
+        `;
+      }
+    };
+
+    // 初期化
+    window.onload = () => window.app.render();
+  </script>
+</body>
+</html>
