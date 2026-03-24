@@ -3,76 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>趣味友 - 大人の趣味コミュニティ</title>
+  <title>定年前の趣味友準備室 - 50代からの趣味コミュニティ -</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    /* スクロールバー非表示（チャット用） */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-[#FCFBF9] font-sans text-gray-800 flex flex-col min-h-screen" id="app">
-  <!-- JavaScriptによってここにアプリが描画されます -->
+  <!-- アプリケーション描画領域 -->
 
   <script>
-    // --- モックデータ ---
+    // --- マスターデータ ---
     const CATEGORIES = [
       { id: 'walking', name: '街歩き', icon: 'compass', color: 'bg-blue-100 text-blue-700' },
       { id: 'museum', name: '美術館巡り', icon: 'palette', color: 'bg-purple-100 text-purple-700' },
       { id: 'food', name: '食べ歩き', icon: 'coffee', color: 'bg-orange-100 text-orange-700' },
       { id: 'history', name: '歴史散策', icon: 'camera', color: 'bg-emerald-100 text-emerald-700' },
+      { id: 'nature', name: '自然・ハイキング', icon: 'tree-pine', color: 'bg-green-100 text-green-700' },
     ];
 
-    const CATEGORY_DEFAULT_IMAGES = {
-      walking: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&q=80&w=800&h=500',
-      museum: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?auto=format&fit=crop&q=80&w=800&h=500',
-      food: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800&h=500',
-      history: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800&h=500',
-    };
+    const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=800&h=500'; // 50代男女＋風景イメージ
 
     const AREAS = ['東京', '神奈川', '千葉', '埼玉', 'その他'];
 
     const AVAILABLE_TAGS = [
-      '初めての方歓迎', 'お一人様歓迎', 'ゆったりペース', '美しい自然風景',
-      '美味しい食事付き', '写真撮影おすすめ', '雨天決行', '現地集合・解散'
+      '初めての方歓迎', 'お一人様歓迎', 'ゆっくり散歩', '健脚向け', '途中休憩あり', 
+      '歩く距離短め', '美しい自然風景', '美味しい食事付き', '写真撮影おすすめ', '雨天決行', '現地集合・解散'
     ];
 
     const MOCK_USERS = [
       { id: 'u1', name: 'サトウ', email: 'sato@example.com', password: 'password', bio: '鎌倉の歴史が好きです。休日はよく神社仏閣巡りをしています。', avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150&h=150', following: [], followers: ['u2'] },
       { id: 'u2', name: 'ミホ', email: 'miho@example.com', password: 'password', bio: '美術館巡りが趣味です。特に印象派の絵画が好きです。', avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150', following: ['u1'], followers: [] },
       { id: 'u3', name: 'タカハシ', email: 'taka@example.com', password: 'password', bio: '美味しいものを食べるのが大好きです！下町によく出没します。', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150', following: [], followers: [] },
+      { id: 'u4', name: 'ヤマモト', email: 'yama@example.com', password: 'password', bio: '自然の中を歩くのが好きです。よろしくお願いします。', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150', following: [], followers: [] },
     ];
 
     const INITIAL_EVENTS = [
-      {
-        id: 'e1', title: '鎌倉・古都の歴史散策と秋の味覚ランチ', categoryId: 'history', area: '神奈川',
-        date: '2026-11-15', time: '10:00 - 15:00', location: '神奈川県 鎌倉市', meetingPlace: 'JR鎌倉駅 東口改札前',
-        fee: '3,000円（ランチ代込み）', capacity: 8, participants: 5, organizerId: 'u1',
-        description: '鎌倉の主要な歴史スポットをゆっくりとしたペースで歩いて巡ります。お昼は地元の食材を使った和食ランチを予定しています。歩きやすい靴でお越しください。',
-        schedule: '10:00 鎌倉駅集合\n10:30 鶴岡八幡宮\n12:30 和食ランチ\n14:00 小町通り散策\n15:00 現地解散',
-        belongings: '歩きやすい靴、飲み物、雨具', notes: '少雨決行ですが、荒天の場合は前日に中止のご連絡をします。',
-        tags: ['初めての方歓迎', 'ゆったりペース', '美味しい食事付き'],
-        imageUrl: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800&h=500',
-      },
-      {
-        id: 'e2', title: '上野の森美術館で印象派展を鑑賞する会', categoryId: 'museum', area: '東京',
-        date: '2026-11-20', time: '13:00 - 16:00', location: '東京都 台東区', meetingPlace: '上野の森美術館 入口前',
-        fee: '2,500円（チケット代実費）', capacity: 6, participants: 6, organizerId: 'u2',
-        description: '開催中の印象派展を一緒に鑑賞しませんか？鑑賞後は近くのカフェで感想を語り合いましょう。美術の知識は必要ありません、純粋に楽しむ会です。',
-        schedule: '13:00 美術館入口集合\n13:10 鑑賞開始\n15:00 カフェで休憩・歓談\n16:00 解散',
-        belongings: '特になし', notes: 'チケットは各自で事前購入をお願いします。',
-        tags: ['お一人様歓迎', '雨天決行', '現地集合・解散'],
-        imageUrl: 'https://images.unsplash.com/photo-1518998053901-53149022716c?auto=format&fit=crop&q=80&w=800&h=500',
-      },
-      {
-        id: 'e3', title: '浅草・下町情緒あふれる食べ歩き', categoryId: 'food', area: '東京',
-        date: '2026-11-28', time: '11:00 - 14:00', location: '東京都 台東区', meetingPlace: '雷門前',
-        fee: '各自実費（2,000円程度）', capacity: 10, participants: 2, organizerId: 'u3',
-        description: '浅草の仲見世通り周辺で、昔ながらのおやつやグルメを少しずつ楽しみましょう。人形焼やメンチカツなど、おすすめのお店をご案内します。',
-        schedule: '11:00 雷門集合\n11:15 食べ歩き開始\n13:30 浅草寺参拝\n14:00 解散',
-        belongings: 'ウェットティッシュがあると便利です', notes: '食べ歩きのマナーを守って楽しみましょう。',
-        tags: ['初めての方歓迎', '写真撮影おすすめ'],
-        imageUrl: 'https://images.unsplash.com/photo-1545569341-9eb8b46d7c1d?auto=format&fit=crop&q=80&w=800&h=500',
-      }
+      { id: 'e1', title: '鎌倉・古都の歴史散策と秋の味覚ランチ', categoryId: 'history', area: '神奈川', date: '2026-11-15', time: '10:00 - 15:00', location: '神奈川県 鎌倉市', meetingPlace: 'JR鎌倉駅 東口改札前', fee: '3,000円（ランチ代込み）', capacity: 8, participants: 5, organizerId: 'u1', description: '鎌倉の主要な歴史スポットをゆっくりとしたペースで歩いて巡ります。', schedule: '10:00 鎌倉駅集合\n12:30 和食ランチ\n15:00 現地解散', belongings: '歩きやすい靴、飲み物', notes: '少雨決行です。', tags: ['初めての方歓迎', 'ゆっくり散歩', '途中休憩あり', '美味しい食事付き'], imageUrl: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e2', title: '上野の森美術館で印象派展を鑑賞する会', categoryId: 'museum', area: '東京', date: '2026-11-20', time: '13:00 - 16:00', location: '東京都 台東区', meetingPlace: '上野の森美術館 入口前', fee: '2,500円（チケット代実費）', capacity: 6, participants: 6, organizerId: 'u2', description: '開催中の印象派展を一緒に鑑賞しませんか？鑑賞後はカフェで感想を語り合いましょう。', schedule: '13:00 集合\n13:10 鑑賞開始\n15:00 カフェで休憩\n16:00 解散', belongings: '特になし', notes: 'チケットは各自で事前購入をお願いします。', tags: ['お一人様歓迎', '雨天決行', '歩く距離短め'], imageUrl: 'https://images.unsplash.com/photo-1518998053901-53149022716c?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e3', title: '浅草・下町情緒あふれる食べ歩き', categoryId: 'food', area: '東京', date: '2026-11-28', time: '11:00 - 14:00', location: '東京都 台東区', meetingPlace: '雷門前', fee: '各自実費（2,000円程度）', capacity: 10, participants: 2, organizerId: 'u3', description: '浅草の仲見世通り周辺で、昔ながらのおやつやグルメを楽しみましょう。', schedule: '11:00 雷門集合\n11:15 食べ歩き\n14:00 解散', belongings: 'ウェットティッシュ', notes: '食べ歩きのマナーを守りましょう。', tags: ['初めての方歓迎', 'ゆっくり散歩', '美味しい食事付き'], imageUrl: 'https://images.unsplash.com/photo-1533050487297-09b450131914?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e4', title: '新宿御苑でお花見ピクニック', categoryId: 'nature', area: '東京', date: '2026-03-30', time: '11:00 - 14:00', location: '東京都 新宿区', meetingPlace: '新宿門前', fee: '無料（入園料500円は各自）', capacity: 15, participants: 8, organizerId: 'u4', description: '満開の桜の下で、お弁当を持ち寄ってのんびりお花見をしましょう。', schedule: '11:00 集合\n11:30 良い場所を見つけてピクニック\n14:00 自由解散', belongings: 'レジャーシート、お弁当、飲み物', notes: 'アルコールの持ち込みは禁止されています。', tags: ['初めての方歓迎', '歩く距離短め', '美しい自然風景'], imageUrl: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e5', title: '皇居ラン＆ウォーク（初心者歓迎）', categoryId: 'walking', area: '東京', date: '2026-04-05', time: '09:00 - 11:00', location: '東京都 千代田区', meetingPlace: '桜田門', fee: '無料', capacity: 10, participants: 4, organizerId: 'u1', description: '健康のために皇居周辺をウォーキング・軽いジョギングで1周します。', schedule: '09:00 集合・準備運動\n09:15 スタート\n10:45 ゴール\n11:00 解散', belongings: '動きやすい服装、ランニングシューズ、飲み物', notes: 'それぞれのペースで進みます。無理なく楽しみましょう。', tags: ['健脚向け', '途中休憩あり'], imageUrl: 'https://images.unsplash.com/photo-1552674605-15c37eee02a9?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e6', title: '横浜赤レンガ・山下公園の海風散歩', categoryId: 'walking', area: '神奈川', date: '2026-04-12', time: '13:00 - 16:00', location: '神奈川県 横浜市', meetingPlace: 'みなとみらい駅', fee: '無料（カフェ代は実費）', capacity: 8, participants: 3, organizerId: 'u2', description: '海沿いの景色を楽しみながら、赤レンガ倉庫から山下公園まで歩きます。', schedule: '13:00 集合\n14:00 赤レンガ倉庫\n15:00 山下公園・カフェ休憩\n16:00 解散', belongings: '特になし', notes: '海風が冷たい場合があるので羽織るものがあると良いです。', tags: ['ゆっくり散歩', '途中休憩あり', '写真撮影おすすめ'], imageUrl: 'https://images.unsplash.com/photo-1585476008681-30eb444857fb?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e7', title: '谷根千（谷中・根津・千駄木）下町レトロ巡り', categoryId: 'walking', area: '東京', date: '2026-04-18', time: '10:30 - 14:00', location: '東京都 文京区・台東区', meetingPlace: '日暮里駅', fee: '無料（飲食代実費）', capacity: 6, participants: 6, organizerId: 'u3', description: '昔ながらの商店街や路地裏を歩き、メンチカツやたい焼きを楽しみます。', schedule: '10:30 集合\n11:00 谷中銀座\n12:30 根津神社\n14:00 解散', belongings: '歩きやすい靴', notes: '細い道が多いので一列で歩きましょう。', tags: ['ゆっくり散歩', '美味しい食事付き'], imageUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e8', title: '高尾山ハイキング（1号路ゆっくりコース）', categoryId: 'nature', area: '東京', date: '2026-04-25', time: '09:30 - 15:00', location: '東京都 八王子市', meetingPlace: '高尾山口駅', fee: '無料（交通費・リフト代は実費）', capacity: 12, participants: 5, organizerId: 'u4', description: '舗装された1号路を使い、途中で休憩を挟みながらゆっくり山頂を目指します。', schedule: '09:30 集合\n10:00 登山開始\n12:00 山頂でお弁当\n15:00 下山完了', belongings: 'リュックサック、飲み物、お弁当、タオル', notes: '体調に合わせて無理せず登りましょう。', tags: ['途中休憩あり', '美しい自然風景', '健脚向け'], imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e9', title: '日本橋 七福神巡りウォーキング', categoryId: 'history', area: '東京', date: '2026-05-02', time: '10:00 - 13:00', location: '東京都 中央区', meetingPlace: '人形町駅', fee: '無料（御朱印代等は実費）', capacity: 10, participants: 1, organizerId: 'u1', description: '日本橋エリアにある七福神を2〜3時間かけてゆっくり巡ります。', schedule: '10:00 集合\n10:15 巡礼スタート\n13:00 ゴール・解散', belongings: '御朱印帳（お持ちの方）', notes: '街中を歩くので交通ルールを守りましょう。', tags: ['ゆっくり散歩', '歩く距離短め'], imageUrl: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&q=80&w=800&h=500' },
+      { id: 'e10', title: '築地場外市場で朝ごはんを食べる会', categoryId: 'food', area: '東京', date: '2026-05-09', time: '08:00 - 10:30', location: '東京都 中央区', meetingPlace: '築地駅', fee: '各自実費', capacity: 6, participants: 2, organizerId: 'u3', description: '朝早く集まって、新鮮な海鮮丼や玉子焼きを楽しみましょう。', schedule: '08:00 集合\n08:15 場外市場散策・朝食\n10:30 解散', belongings: '特になし', notes: '混雑が予想されるため、はぐれないように注意しましょう。', tags: ['美味しい食事付き', '歩く距離短め', '現地集合・解散'], imageUrl: 'https://images.unsplash.com/photo-1546069901-ba6e3f0edce8?auto=format&fit=crop&q=80&w=800&h=500' }
     ];
 
     const MOCK_MESSAGES = [
@@ -80,12 +60,31 @@
       { id: 2, sender: 'participant', name: 'ヨシダ', text: '初参加です。お手柔らかにお願いします。', time: '11/02 14:30' },
     ];
 
+    const FEATURE_PAGES = {
+      sakura: {
+        title: '春爛漫！お花見・桜並木散策特集',
+        description: '春の訪れを感じる、東京・神奈川のおすすめ桜スポットをご紹介します。無理なく歩ける名所を集めました。',
+        spots: [
+          { name: '新宿御苑', location: '東京都新宿区', season: '3月下旬〜4月上旬', description: '広大な敷地に多様な種類の桜が咲き誇り、長い期間お花見を楽しめます。アルコール持ち込み禁止のため、落ち着いて散策できます。', url: 'https://fng.or.jp/shinjuku/' },
+          { name: '目黒川の桜並木', location: '東京都目黒区', season: '3月下旬〜4月上旬', description: '川沿い約4kmにわたって桜が咲き乱れます。周辺のカフェやショップでのテイクアウトを楽しみながらの散策がおすすめです。', url: 'https://meguro-kanko.or.jp/' },
+          { name: '三溪園', location: '神奈川県横浜市', season: '3月下旬〜4月上旬', description: '歴史的建造物と桜の調和が見事な日本庭園。落ち着いた和の雰囲気の中で、風情あるお花見が堪能できます。', url: 'https://www.sankeien.or.jp/' }
+        ]
+      },
+      museum: {
+        title: '雨の日でも安心・美術館めぐり',
+        description: '天候に左右されず、ゆったりとした時間を過ごせるおすすめの美術館をご紹介します。',
+        spots: [
+          { name: '国立新美術館', location: '東京都港区', season: '通年', description: '国内最大級の展示スペースを誇り、常に多彩な展覧会が開催されています。波打つガラス張りの外観やカフェスペースも必見です。', url: 'https://www.nact.jp/' },
+          { name: '横浜美術館', location: '神奈川県横浜市', season: '通年', description: 'みなとみらいの中心に位置し、近現代美術を中心に充実したコレクションを展示。周辺の商業施設と合わせて一日中楽しめます。', url: 'https://yokohama.art.museum/' },
+          { name: '彫刻の森美術館', location: '神奈川県足柄下郡箱根町', season: '通年', description: '自然とアートが調和した野外美術館ですが、屋内展示室（ピカソ館など）も充実しており、雨の日ならではのしっとりとした雰囲気も魅力的です。', url: 'https://www.hakone-oam.or.jp/' }
+        ]
+      }
+    };
+
     // --- ヘルパー関数 ---
     function eHTML(str) {
       if (str == null) return '';
-      return String(str).replace(/[&<>"']/g, match => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[match]);
+      return String(str).replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[match]);
     }
 
     // --- アプリケーションロジック ---
@@ -105,6 +104,7 @@
         chatMessages: JSON.parse(JSON.stringify(MOCK_MESSAGES)),
         createForm: { title: '', categoryId: 'walking', area: '東京', date: '', time: '', location: '', meetingPlace: '', fee: '', capacity: 6, description: '', schedule: '', belongings: '', notes: '', tags: [], customImageUrl: '' },
         isEditingProfile: false,
+        isMobileMenuOpen: false,
       },
 
       render() {
@@ -116,10 +116,20 @@
         }
       },
 
-      navigate(page, id = null) {
+      // History APIを利用した画面遷移
+      navigate(page, id = null, replace = false) {
         this.state.currentPage = page;
-        if (page === 'detail' || page === 'apply' || page === 'chat') this.state.currentEventId = id;
+        if (['detail', 'apply', 'chat'].includes(page)) this.state.currentEventId = id;
         if (page === 'profile') this.state.targetUserId = id;
+        this.state.isMobileMenuOpen = false; // メニューを閉じる
+        
+        const hash = `#${page}${id ? '/' + id : ''}`;
+        if (replace) {
+          history.replaceState({ page, id, targetUserId: this.state.targetUserId }, '', hash);
+        } else {
+          history.pushState({ page, id, targetUserId: this.state.targetUserId }, '', hash);
+        }
+        
         window.scrollTo(0, 0);
         this.render();
       },
@@ -127,6 +137,21 @@
       authNavigate(page, id = null) {
         if (this.state.currentUser) this.navigate(page, id);
         else this.navigate('auth');
+      },
+
+      goToSearch() {
+        if (this.state.currentPage !== 'top') {
+          this.navigate('top');
+          setTimeout(() => document.getElementById('search-panel')?.scrollIntoView({ behavior: 'smooth' }), 100);
+        } else {
+          document.getElementById('search-panel')?.scrollIntoView({ behavior: 'smooth' });
+        }
+        this.state.isMobileMenuOpen = false;
+      },
+
+      toggleMobileMenu() {
+        this.state.isMobileMenuOpen = !this.state.isMobileMenuOpen;
+        this.render();
       },
 
       // --- アクションハンドラ ---
@@ -137,20 +162,12 @@
         this.render();
       },
 
-      updateSearch(key, val) {
-        this.state.searchParams[key] = val;
-        this.render();
-      },
-
-      resetSearch() {
-        this.state.searchParams = { area: '', date: '', categoryId: '', tags: [] };
-        this.render();
-      },
+      updateSearch(key, val) { this.state.searchParams[key] = val; this.render(); },
+      resetSearch() { this.state.searchParams = { area: '', date: '', categoryId: '', tags: [] }; this.render(); },
 
       handleAuthSubmit(e) {
         if (e) e.preventDefault();
         this.state.authError = '';
-        
         const email = document.getElementById('auth_email').value;
         const password = document.getElementById('auth_password').value;
         
@@ -168,7 +185,7 @@
           const survey = document.getElementById('auth_survey').value;
           const newUser = {
             id: 'u_' + Date.now(), name, email, password, bio: 'よろしくお願いします！',
-            avatarUrl: 'https://images.unsplash.com/photo-1544168190-79c154273140?auto=format&fit=crop&q=80&w=150&h=150', // 初期画像
+            avatarUrl: 'https://images.unsplash.com/photo-1544168190-79c154273140?auto=format&fit=crop&q=80&w=150&h=150',
             following: [], followers: []
           };
           this.state.users.push(newUser);
@@ -178,10 +195,7 @@
         }
       },
 
-      handleLogout() {
-        this.state.currentUser = null;
-        this.navigate('top');
-      },
+      handleLogout() { this.state.currentUser = null; this.navigate('top'); },
 
       handleApplySubmit(e) {
         e.preventDefault();
@@ -219,7 +233,7 @@
       },
 
       backupCreateForm() {
-        const ids = ['title', 'categoryId', 'area', 'date', 'time', 'location', 'customImageUrl', 'capacity', 'fee', 'meetingPlace', 'description', 'schedule', 'belongings', 'notes'];
+        const ids = ['title', 'categoryId', 'area', 'date', 'time', 'location', 'capacity', 'fee', 'meetingPlace', 'description', 'schedule', 'belongings', 'notes'];
         ids.forEach(id => {
           const el = document.getElementById('cf_' + id);
           if (el) this.state.createForm[id] = el.value;
@@ -234,23 +248,30 @@
         this.render();
       },
 
+      handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.state.createForm.customImageUrl = e.target.result;
+            this.render();
+          };
+          reader.readAsDataURL(file);
+        }
+      },
+
       handleCreateSubmit(e) {
         e.preventDefault();
         this.backupCreateForm();
         const f = this.state.createForm;
-        const finalImageUrl = f.customImageUrl.trim() || CATEGORY_DEFAULT_IMAGES[f.categoryId];
+        const finalImageUrl = f.customImageUrl || DEFAULT_EVENT_IMAGE;
         
         const newEvent = {
-          ...f,
-          id: 'e_' + Date.now(),
-          participants: 1,
-          organizerId: this.state.currentUser.id,
-          imageUrl: finalImageUrl
+          ...f, id: 'e_' + Date.now(), participants: 1, organizerId: this.state.currentUser.id, imageUrl: finalImageUrl
         };
         this.state.events.unshift(newEvent);
         this.state.myApplications.push(newEvent.id);
         
-        // フォームリセット
         this.state.createForm = { title: '', categoryId: 'walking', area: '東京', date: '', time: '', location: '', meetingPlace: '', fee: '', capacity: 6, description: '', schedule: '', belongings: '', notes: '', tags: [], customImageUrl: '' };
         this.navigate('detail', newEvent.id);
       },
@@ -259,19 +280,14 @@
         const name = document.getElementById('pe_name').value;
         const bio = document.getElementById('pe_bio').value;
         const avatarUrl = document.getElementById('pe_avatarUrl').value;
-        
-        this.state.currentUser.name = name;
-        this.state.currentUser.bio = bio;
-        this.state.currentUser.avatarUrl = avatarUrl;
-        
+        this.state.currentUser.name = name; this.state.currentUser.bio = bio; this.state.currentUser.avatarUrl = avatarUrl;
         const user = this.state.users.find(u => u.id === this.state.currentUser.id);
         if (user) { user.name = name; user.bio = bio; user.avatarUrl = avatarUrl; }
-        
         this.state.isEditingProfile = false;
         this.render();
       },
 
-      // --- ビューの構築 ---
+      // --- HTML ビルド ---
       buildHTML() {
         return `
           ${this.state.currentPage !== 'chat' ? this.renderHeader() : ''}
@@ -282,34 +298,64 @@
 
       renderHeader() {
         const userBtn = this.state.currentUser 
-          ? `<button onclick="app.navigate('mypage')" class="flex items-center text-[#E67E22] font-bold bg-orange-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-100 transition-colors text-sm md:text-base"><i data-lucide="user" class="w-4 h-4 mr-1 md:mr-2"></i> マイページ</button>`
-          : `<button onclick="app.navigate('auth')" class="text-[#E67E22] font-bold border border-[#E67E22] px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-50 text-sm md:text-base">ログイン / 登録</button>`;
+          ? `<button onclick="app.navigate('mypage')" class="flex items-center text-[#E67E22] font-bold bg-orange-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-100 transition-colors text-sm w-full md:w-auto justify-center"><i data-lucide="user" class="w-4 h-4 mr-1"></i> マイページ</button>`
+          : `<button onclick="app.navigate('auth')" class="text-[#E67E22] font-bold border border-[#E67E22] px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-orange-50 text-sm w-full md:w-auto justify-center">ログイン / 登録</button>`;
 
         return `
           <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
             <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-              <div class="flex items-center cursor-pointer" onclick="app.navigate('top')">
+              <div class="flex items-center cursor-pointer shrink-0" onclick="app.navigate('top')">
                 <div class="w-8 h-8 bg-[#4A5D4E] rounded flex items-center justify-center mr-2">
                   <i data-lucide="users" class="text-white w-5 h-5"></i>
                 </div>
-                <span class="text-xl font-bold text-[#2C3E50] tracking-wider">趣味友</span>
+                <span class="text-lg md:text-xl font-bold text-[#2C3E50] tracking-wider truncate">定年前の趣味友準備室</span>
               </div>
-              <nav class="hidden md:flex space-x-6 items-center">
-                <button onclick="app.navigate('top')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">イベントを探す</button>
+              
+              <!-- PC用ナビ -->
+              <nav class="hidden lg:flex space-x-6 items-center text-sm">
+                <button onclick="app.goToSearch()" class="text-gray-600 hover:text-[#4A5D4E] font-bold">イベントを探す</button>
                 <button onclick="app.authNavigate('create')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">イベントを作る</button>
+                <button onclick="app.navigate('about')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">初めての方へ</button>
+                <button onclick="app.navigate('faq')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">よくある質問</button>
+                <button onclick="app.navigate('guide_organizer')" class="text-gray-600 hover:text-[#4A5D4E] font-bold">主催者ガイド</button>
                 ${userBtn}
               </nav>
-              <div class="md:hidden flex items-center">${userBtn}</div>
+
+              <!-- スマホ用ハンバーガー -->
+              <div class="lg:hidden flex items-center">
+                <button onclick="app.toggleMobileMenu()" class="text-gray-600 p-2">
+                  <i data-lucide="${this.state.isMobileMenuOpen ? 'x' : 'menu'}" class="w-6 h-6"></i>
+                </button>
+              </div>
             </div>
+
+            <!-- スマホ用ドロップダウンメニュー -->
+            ${this.state.isMobileMenuOpen ? `
+              <div class="lg:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
+                <div class="flex flex-col px-4 py-4 space-y-4">
+                  <button onclick="app.goToSearch()" class="text-left text-gray-800 font-bold py-2 border-b border-gray-50">イベントを探す</button>
+                  <button onclick="app.authNavigate('create')" class="text-left text-gray-800 font-bold py-2 border-b border-gray-50">イベントを作る</button>
+                  <button onclick="app.navigate('about')" class="text-left text-gray-800 font-bold py-2 border-b border-gray-50">初めての方へ・参加の流れ</button>
+                  <button onclick="app.navigate('faq')" class="text-left text-gray-800 font-bold py-2 border-b border-gray-50">よくある質問</button>
+                  <button onclick="app.navigate('guide_organizer')" class="text-left text-gray-800 font-bold py-2 border-b border-gray-50">主催者ガイド</button>
+                  <div class="pt-2">${userBtn}</div>
+                </div>
+              </div>
+            ` : ''}
           </header>
         `;
       },
 
       renderFooter() {
         return `
-          <footer class="bg-[#2C3E50] text-gray-300 py-8 mt-auto">
+          <footer class="bg-[#2C3E50] text-gray-300 py-10 mt-auto">
             <div class="max-w-6xl mx-auto px-4 text-center">
-              <p class="mb-4 font-bold text-white text-lg">大人の趣味コミュニティ 趣味友</p>
+              <p class="mb-4 font-bold text-white text-lg">定年前の趣味友準備室<br><span class="text-sm font-normal">- 50代からの趣味コミュニティ -</span></p>
+              <div class="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm mb-6">
+                <button onclick="app.navigate('terms')" class="hover:text-white">利用規約</button>
+                <button onclick="app.navigate('privacy')" class="hover:text-white">プライバシーポリシー</button>
+                <button onclick="app.navigate('contact')" class="hover:text-white">お問い合わせ</button>
+              </div>
               <p class="text-xs text-gray-500">&copy; 2026 Shumitomo. All rights reserved.</p>
             </div>
           </footer>
@@ -325,9 +371,15 @@
           case 'create': return this.renderEventCreate();
           case 'auth': return this.renderAuthPage();
           case 'mypage': return this.renderProfileSection(this.state.currentUser, true);
-          case 'profile': 
-            const u = this.state.users.find(u => u.id === this.state.targetUserId);
-            return this.renderProfileSection(u, false);
+          case 'profile': return this.renderProfileSection(this.state.users.find(u => u.id === this.state.targetUserId), false);
+          case 'terms': return this.renderStaticPage('利用規約', this.getTermsContent());
+          case 'privacy': return this.renderStaticPage('プライバシーポリシー', this.getPrivacyContent());
+          case 'contact': return this.renderContactPage();
+          case 'about': return this.renderStaticPage('初めての方へ・参加の流れ', this.getAboutContent());
+          case 'faq': return this.renderStaticPage('よくある質問', this.getFaqContent());
+          case 'guide_organizer': return this.renderStaticPage('主催者向けガイド', this.getGuideOrganizerContent());
+          case 'feature_sakura': return this.renderFeaturePage('sakura');
+          case 'feature_museum': return this.renderFeaturePage('museum');
           default: return this.renderTopPage();
         }
       },
@@ -364,7 +416,8 @@
                 <div>
                   <h4 class="text-xl font-bold text-gray-800 mb-3 leading-tight pr-24">${eHTML(event.title)}</h4>
                   <div class="mb-4">
-                    ${event.tags.map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}
+                    ${event.tags.slice(0,4).map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-xs font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}
+                    ${event.tags.length > 4 ? `<span class="text-xs text-gray-400 font-bold mb-2">他</span>` : ''}
                   </div>
                   <div class="space-y-2 text-gray-600 mb-4">
                     <div class="flex items-center"><i data-lucide="calendar" class="w-5 h-5 mr-3 text-[#4A5D4E]"></i><span class="text-lg">${event.date} ${event.time}</span></div>
@@ -378,7 +431,7 @@
                     <i data-lucide="users" class="w-5 h-5 mr-1"></i><span class="text-md">${event.participants} / ${event.capacity}名</span>
                   </div>
                   <div>
-                    ${isFull ? `<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold">満員</span>` : `<span class="text-[#E67E22] font-bold flex items-center">詳細を見る <i data-lucide="chevron-left" class="w-5 h-5 rotate-180"></i></span>`}
+                    ${isFull ? `<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm md:text-base">満員</span>` : `<span class="text-[#E67E22] font-bold flex items-center text-sm md:text-base">詳細を見る <i data-lucide="chevron-left" class="w-5 h-5 rotate-180"></i></span>`}
                   </div>
                 </div>
               </div>
@@ -436,7 +489,7 @@
                 </div>
               </section>
 
-              <section id="event-list">
+              <section id="event-list" class="mb-16">
                 <div class="flex items-center justify-between mb-6 border-b-2 border-gray-100 pb-2">
                   <h3 class="text-2xl font-bold text-gray-800 flex items-center"><span class="w-2 h-6 bg-[#4A5D4E] rounded-full mr-3"></span>開催予定のイベント</h3>
                   <span class="font-bold text-[#E67E22] text-lg bg-orange-50 px-3 py-1 rounded-lg">${filteredEvents.length} 件</span>
@@ -445,6 +498,27 @@
                   ? `<div class="bg-white rounded-xl p-12 text-center border border-gray-200"><i data-lucide="search" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i><p class="text-xl font-bold text-gray-600">条件に一致するイベントがありません。</p></div>`
                   : `<div class="space-y-6">${eventCards}</div>`
                 }
+              </section>
+
+              <!-- 今後のおすすめイベント（静的セクション） -->
+              <section class="mb-10">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center"><span class="w-2 h-6 bg-[#E67E22] rounded-full mr-3"></span>今後のおすすめ・特集</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div onclick="app.navigate('feature_sakura')" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group cursor-pointer">
+                    <div class="h-40 overflow-hidden"><img src="https://images.unsplash.com/photo-1522383225653-ed111181a951?auto=format&fit=crop&q=80&w=800&h=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"></div>
+                    <div class="p-4">
+                      <h4 class="font-bold text-lg text-gray-800 mb-1">春爛漫！お花見・桜並木散策特集</h4>
+                      <p class="text-sm text-gray-500">桜の名所を巡るイベントをピックアップしました。</p>
+                    </div>
+                  </div>
+                  <div onclick="app.navigate('feature_museum')" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group cursor-pointer">
+                    <div class="h-40 overflow-hidden"><img src="https://images.unsplash.com/photo-1518998053901-53149022716c?auto=format&fit=crop&q=80&w=800&h=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"></div>
+                    <div class="p-4">
+                      <h4 class="font-bold text-lg text-gray-800 mb-1">雨の日でも安心・美術館めぐり</h4>
+                      <p class="text-sm text-gray-500">天候に左右されない、落ち着いたアートの時間を。</p>
+                    </div>
+                  </div>
+                </div>
               </section>
             </div>
           </div>
@@ -459,32 +533,19 @@
             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 w-full max-w-md">
               <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center border-b-2 border-[#4A5D4E] pb-3">${isLogin ? 'ログイン' : '新規会員登録'}</h2>
               ${this.state.authError ? `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold">${this.state.authError}</div>` : ''}
-              <form onsubmit="event.preventDefault(); app.handleAuthSubmit(event)">
+              <form onsubmit="app.handleAuthSubmit(event)">
                 ${!isLogin ? `<label class="block font-bold text-gray-700 mb-2">ユーザー名</label><input id="auth_name" required type="text" class="${inputClass}" placeholder="例：ヤマダ">` : ''}
-                <label class="block font-bold text-gray-700 mb-2">メールアドレス</label>
-                <input id="auth_email" required type="email" class="${inputClass}" placeholder="mail@example.com">
-                <label class="block font-bold text-gray-700 mb-2">パスワード</label>
-                <input id="auth_password" required type="password" class="${inputClass}" placeholder="英数字8文字以上">
-                
+                <label class="block font-bold text-gray-700 mb-2">メールアドレス</label><input id="auth_email" required type="email" class="${inputClass}" placeholder="mail@example.com">
+                <label class="block font-bold text-gray-700 mb-2">パスワード</label><input id="auth_password" required type="password" class="${inputClass}" placeholder="英数字8文字以上">
                 ${!isLogin ? `
-                  <label class="block font-bold text-gray-700 mb-2 mt-4">アンケート</label>
-                  <p class="text-sm text-gray-500 mb-2">当サイトをどこでお知りになりましたか？</p>
-                  <select id="auth_survey" required class="${inputClass} bg-white">
-                    <option value="">選択してください</option>
-                    <option value="search">検索エンジン</option><option value="friend">知人の紹介</option><option value="sns">SNS</option><option value="other">その他</option>
-                  </select>
+                  <label class="block font-bold text-gray-700 mb-2 mt-4">アンケート</label><p class="text-sm text-gray-500 mb-2">当サイトをどこでお知りになりましたか？</p>
+                  <select id="auth_survey" required class="${inputClass} bg-white"><option value="">選択してください</option><option value="search">検索エンジン</option><option value="friend">知人の紹介</option><option value="sns">SNS</option><option value="other">その他</option></select>
                 ` : ''}
                 <button type="submit" class="w-full font-bold rounded-lg transition-colors duration-200 flex items-center justify-center text-lg py-3 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] mt-4">${isLogin ? 'ログインする' : '登録してはじめる'}</button>
               </form>
               <div class="mt-6 text-center">
                 <button onclick="app.state.isLoginMode = ${!isLogin}; app.state.authError = ''; app.render()" class="text-[#4A5D4E] font-bold hover:underline">${isLogin ? '新規会員登録はこちら' : '既にアカウントをお持ちの方はこちら（ログイン）'}</button>
               </div>
-              ${isLogin ? `
-              <div class="mt-8 pt-4 border-t border-gray-100 text-sm text-gray-500 text-center">
-                <p>※お試し用アカウント</p>
-                <p>sato@example.com / password</p>
-              </div>
-              ` : ''}
             </div>
           </div>
         `;
@@ -498,28 +559,21 @@
         const isFull = event.participants >= event.capacity;
         const isApplied = this.state.myApplications.includes(event.id);
 
-        let actionBtn = '';
-        if (isApplied) {
-          actionBtn = `<button onclick="app.authNavigate('chat', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#4A5D4E] text-white hover:bg-[#3d4d40] shadow-lg flex items-center justify-center text-xl"><i data-lucide="message-circle" class="w-6 h-6 mr-2"></i> 参加者チャットへ</button>`;
-        } else if (isFull) {
-          actionBtn = `<button disabled class="w-full font-bold rounded-lg py-4 px-6 bg-gray-300 text-gray-600 cursor-not-allowed opacity-70">定員に達しました</button>`;
-        } else {
-          actionBtn = `<button onclick="app.authNavigate('apply', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-lg text-xl">このイベントに参加する</button>`;
-        }
+        let actionBtn = isApplied ? `<button onclick="app.authNavigate('chat', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#4A5D4E] text-white hover:bg-[#3d4d40] shadow-lg flex items-center justify-center text-xl"><i data-lucide="message-circle" class="w-6 h-6 mr-2"></i> 参加者チャットへ</button>`
+          : isFull ? `<button disabled class="w-full font-bold rounded-lg py-4 px-6 bg-gray-300 text-gray-600 cursor-not-allowed opacity-70">定員に達しました</button>`
+          : `<button onclick="app.authNavigate('apply', '${event.id}')" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-lg text-xl">このイベントに参加する</button>`;
 
         return `
           <div class="pb-24 max-w-3xl mx-auto">
             <div class="p-4 sticky top-0 bg-[#FCFBF9]/90 backdrop-blur z-10">
-              <button onclick="app.navigate('top')" class="flex items-center text-[#4A5D4E] font-bold text-lg hover:underline py-2"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> イベント一覧へ戻る</button>
+              <button onclick="history.back()" class="flex items-center text-[#4A5D4E] font-bold text-lg hover:underline py-2"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
             </div>
             <div class="bg-white rounded-t-2xl shadow-sm overflow-hidden">
               <img src="${event.imageUrl}" class="w-full h-64 md:h-80 object-cover" />
               <div class="p-6 md:p-8">
                 <div class="flex flex-wrap items-center gap-2 mb-4"><span class="bg-emerald-50 text-[#4A5D4E] px-4 py-1 rounded-full font-bold">${cat?.name}</span></div>
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 leading-relaxed">${eHTML(event.title)}</h2>
-                <div class="mb-6 border-b border-gray-100 pb-6">
-                  ${event.tags.map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}
-                </div>
+                <div class="mb-6 border-b border-gray-100 pb-6">${event.tags.map(tag => `<span class="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-bold mr-2 mb-2"><i data-lucide="tag" class="w-3 h-3 mr-1"></i>${tag}</span>`).join('')}</div>
                 <div class="bg-[#f9f8f6] rounded-xl p-6 mb-8 space-y-4 text-lg">
                   <div class="flex"><i data-lucide="calendar" class="w-6 h-6 text-[#4A5D4E] mr-4 mt-1"></i><div><p class="text-gray-500 text-sm mb-1">日時</p><p class="font-bold text-gray-800">${event.date} ${event.time}</p></div></div>
                   <div class="flex"><i data-lucide="map-pin" class="w-6 h-6 text-[#4A5D4E] mr-4 mt-1"></i><div><p class="text-gray-500 text-sm mb-1">集合場所</p><p class="font-bold text-gray-800">${eHTML(event.meetingPlace)}</p></div></div>
@@ -531,8 +585,7 @@
                   <section><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">当日の流れ</h3><div class="bg-white border border-gray-200 rounded-xl p-5"><p class="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">${eHTML(event.schedule)}</p></div></section>
                   <section class="grid md:grid-cols-2 gap-8">
                      <div><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">持ち物</h3><p class="text-gray-700 text-lg">${eHTML(event.belongings)}</p></div>
-                     <div>
-                        <h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">主催者</h3>
+                     <div><h3 class="text-xl font-bold text-[#2C3E50] border-b-2 border-gray-100 pb-2 mb-4">主催者</h3>
                         <div onclick="app.authNavigate('profile', '${org.id}')" class="flex items-center p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-gray-200">
                           <img src="${org?.avatarUrl || 'https://via.placeholder.com/150'}" class="w-14 h-14 rounded-full mr-4 object-cover border border-gray-200" />
                           <div><span class="text-lg font-bold text-gray-800 block">${eHTML(org?.name)}</span><span class="text-sm text-[#E67E22] font-bold">プロフィールを見る</span></div>
@@ -540,7 +593,7 @@
                      </div>
                   </section>
                   <section class="bg-red-50 rounded-xl p-5 border border-red-100">
-                     <h3 class="text-lg font-bold text-red-800 flex items-center mb-2"><i data-lucide="info" class="w-5 h-5 mr-2"></i> ご注意・お願い</h3><p class="text-red-700">${eHTML(event.notes)}</p>
+                     <h3 class="text-lg font-bold text-red-800 flex items-center mb-2"><i data-lucide="info" class="w-5 h-5 mr-2"></i> ご注意・お願い</h3><p class="text-red-700 whitespace-pre-wrap">${eHTML(event.notes)}</p>
                   </section>
                 </div>
               </div>
@@ -559,7 +612,7 @@
         const event = this.state.events.find(e => e.id === this.state.currentEventId);
         return `
           <div class="pb-16 max-w-2xl mx-auto px-4 mt-6">
-            <button onclick="app.navigate('detail', '${event.id}')" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> イベント詳細に戻る</button>
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> イベント詳細に戻る</button>
             <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-[#4A5D4E] pb-2 inline-block">参加お申し込み</h2>
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 flex items-center">
               <img src="${event.imageUrl}" class="w-16 h-16 rounded-lg object-cover mr-4" />
@@ -574,7 +627,7 @@
                  <h4 class="font-bold text-gray-800 mb-3">ご参加の前にご確認ください</h4>
                  <ul class="list-disc list-inside text-gray-600 space-y-2 mb-6">
                     <li>体調不良の場合は無理をせず、キャンセルのご連絡をお願いします。</li>
-                    <li>営業目的や宗教等の勧誘活動は固くお断りいたします。</li>
+                    <li><span class="text-red-600 font-bold">出会い目的（恋愛・婚活等）や、営業・宗教等の勧誘目的での参加は固く禁止しております。</span></li>
                     <li>他の参加者が不快に感じる言動はお控えください。</li>
                  </ul>
                  <label class="flex items-center cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -590,46 +643,6 @@
         `;
       },
 
-      renderEventChat() {
-        const event = this.state.events.find(e => e.id === this.state.currentEventId);
-        const msgs = this.state.chatMessages.map(msg => {
-          const isMe = msg.sender === 'me';
-          const isOrg = msg.sender === 'organizer';
-          return `
-            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-              <div class="flex items-baseline mb-1"><span class="text-sm font-bold text-gray-600 mr-2">${eHTML(msg.name)}</span><span class="text-xs text-gray-400">${msg.time}</span></div>
-              <div class="max-w-[80%] p-4 rounded-2xl text-lg ${isMe ? 'bg-[#E67E22] text-white rounded-tr-none' : isOrg ? 'bg-[#4A5D4E] text-white rounded-tl-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}">${eHTML(msg.text)}</div>
-            </div>
-          `;
-        }).join('');
-
-        return `
-          <div class="flex flex-col h-[100vh] max-w-3xl mx-auto bg-gray-50">
-            <div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center shadow-sm z-10 shrink-0">
-               <button onclick="app.navigate('detail', '${event.id}')" class="p-2 -ml-2 text-gray-500 hover:text-gray-800"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
-               <div class="ml-2 flex-1 min-w-0">
-                 <div class="flex items-center text-xs font-bold text-[#E67E22] mb-1"><span class="bg-[#E67E22] text-white px-2 py-0.5 rounded mr-2">参加者限定</span></div>
-                 <h2 class="text-lg font-bold text-gray-800 truncate">${eHTML(event.title)}</h2>
-               </div>
-            </div>
-            <div class="bg-emerald-50 border-b border-emerald-100 p-3 shrink-0 flex items-start text-sm">
-               <i data-lucide="info" class="w-5 h-5 text-[#4A5D4E] mr-2 shrink-0 mt-0.5"></i>
-               <p class="text-gray-700">主催者からのお知らせ: 当日は<span class="font-bold">「${eHTML(event.meetingPlace)}」</span>に直接お集まりください。</p>
-            </div>
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
-              <div class="text-center text-sm text-gray-400 my-4">チャットが開始されました</div>
-              ${msgs}
-            </div>
-            <div class="bg-white border-t border-gray-200 p-4 shrink-0 pb-safe">
-              <form onsubmit="app.handleChatSubmit(event)" class="flex items-end gap-2">
-                <textarea id="chatInput" oninput="document.getElementById('chatSubmitBtn').disabled = !this.value.trim()" class="flex-1 max-h-32 min-h-[52px] p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E67E22] outline-none resize-none text-lg" placeholder="メッセージを入力..." rows="1" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); app.handleChatSubmit(event);}"></textarea>
-                <button id="chatSubmitBtn" type="submit" disabled class="w-12 h-12 flex-shrink-0 bg-[#4A5D4E] text-white rounded-full flex items-center justify-center disabled:opacity-50"><i data-lucide="send" class="w-5 h-5 ml-1"></i></button>
-              </form>
-            </div>
-          </div>
-        `;
-      },
-
       renderEventCreate() {
         const f = this.state.createForm;
         const inputClass = "w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#4A5D4E] outline-none bg-white";
@@ -637,16 +650,13 @@
 
         return `
           <div class="pb-24 max-w-2xl mx-auto px-4 mt-6">
-            <button onclick="app.navigate('top')" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> トップへ戻る</button>
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
             <h2 class="text-2xl font-bold text-gray-800 mb-2 border-b-4 border-[#E67E22] pb-2 inline-block">新規イベントを作成する</h2>
             <p class="text-gray-600 mb-8">趣味の合う仲間を募集しましょう。</p>
 
             <form onsubmit="app.handleCreateSubmit(event)" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
               <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mb-4">1. イベントの基本情報</h3>
-              
-              <label class="${labelClass}">イベントタイトル <span class="text-red-500 text-sm ml-2">必須</span></label>
-              <input id="cf_title" required type="text" class="${inputClass}" placeholder="例：秋の鎌倉・お寺巡りと精進料理ランチ" value="${eHTML(f.title)}">
-
+              <label class="${labelClass}">イベントタイトル <span class="text-red-500 text-sm ml-2">必須</span></label><input id="cf_title" required type="text" class="${inputClass}" placeholder="例：秋の鎌倉・お寺巡りと精進料理ランチ" value="${eHTML(f.title)}">
               <div class="grid grid-cols-2 gap-4">
                 <div><label class="${labelClass}">カテゴリ</label><select id="cf_categoryId" class="${inputClass}">${CATEGORIES.map(c => `<option value="${c.id}" ${f.categoryId===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
                 <div><label class="${labelClass}">エリア</label><select id="cf_area" class="${inputClass}">${AREAS.map(a => `<option value="${a}" ${f.area===a?'selected':''}>${a}</option>`).join('')}</select></div>
@@ -655,12 +665,13 @@
                 <div><label class="${labelClass}">開催日 <span class="text-red-500 text-sm ml-2">必須</span></label><input id="cf_date" required type="date" class="${inputClass}" value="${f.date}"></div>
                 <div><label class="${labelClass}">時間</label><input id="cf_time" type="text" class="${inputClass}" placeholder="例：10:00 - 14:00" value="${eHTML(f.time)}"></div>
               </div>
-              <label class="${labelClass}">詳細な場所</label>
-              <input id="cf_location" type="text" class="${inputClass}" placeholder="例：神奈川県 鎌倉市" value="${eHTML(f.location)}">
-
+              <label class="${labelClass}">詳細な場所</label><input id="cf_location" type="text" class="${inputClass}" placeholder="例：神奈川県 鎌倉市" value="${eHTML(f.location)}">
+              
               <label class="${labelClass}">メイン画像（任意）</label>
-              <p class="text-gray-500 text-sm mb-2 flex items-center"><i data-lucide="image" class="w-4 h-4 mr-1"></i> 空欄時はカテゴリに合った画像が自動で割り当てられます。</p>
-              <input id="cf_customImageUrl" type="url" class="${inputClass}" placeholder="https://..." value="${eHTML(f.customImageUrl)}">
+              <p class="text-gray-500 text-sm mb-2">設定しない場合は自動で画像が割り当てられます。</p>
+              ${f.customImageUrl ? `<img src="${f.customImageUrl}" class="w-full h-48 object-cover rounded-lg mb-3">` : ''}
+              <input type="file" accept="image/*" onchange="app.handleImageUpload(event)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+              <input type="hidden" id="cf_customImageUrl" value="${eHTML(f.customImageUrl)}">
 
               <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mt-10 mb-4">2. 募集とアピールポイント</h3>
               <label class="${labelClass}">アピールタグ</label>
@@ -674,8 +685,7 @@
                 <div><label class="${labelClass}">定員</label><div class="flex items-center"><input id="cf_capacity" type="number" min="2" class="${inputClass} w-24 mr-2 text-center" value="${f.capacity}"><span class="text-lg">名</span></div></div>
                 <div><label class="${labelClass}">参加費</label><input id="cf_fee" type="text" class="${inputClass}" placeholder="例：各自実費" value="${eHTML(f.fee)}"></div>
               </div>
-              <label class="${labelClass}">集合場所</label>
-              <input id="cf_meetingPlace" type="text" class="${inputClass}" placeholder="例：JR鎌倉駅 東口改札前" value="${eHTML(f.meetingPlace)}">
+              <label class="${labelClass}">集合場所</label><input id="cf_meetingPlace" type="text" class="${inputClass}" placeholder="例：JR鎌倉駅 東口改札前" value="${eHTML(f.meetingPlace)}">
 
               <h3 class="text-xl font-bold text-[#4A5D4E] bg-emerald-50 p-3 rounded-lg mt-10 mb-4">3. イベントの詳細内容</h3>
               <label class="${labelClass}">説明・見どころ</label><textarea id="cf_description" rows="4" class="${inputClass}">${eHTML(f.description)}</textarea>
@@ -683,10 +693,48 @@
               <label class="${labelClass}">持ち物</label><input id="cf_belongings" type="text" class="${inputClass}" value="${eHTML(f.belongings)}">
               <label class="${labelClass}">注意事項</label><input id="cf_notes" type="text" class="${inputClass}" value="${eHTML(f.notes)}">
 
-              <div class="pt-10">
-                <button type="submit" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-md text-xl">イベントを公開する</button>
-              </div>
+              <div class="pt-10"><button type="submit" class="w-full font-bold rounded-lg py-4 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-md text-xl">イベントを公開する</button></div>
             </form>
+          </div>
+        `;
+      },
+
+      renderEventChat() {
+        const event = this.state.events.find(e => e.id === this.state.currentEventId);
+        const msgs = this.state.chatMessages.map(msg => {
+          const isMe = msg.sender === 'me';
+          const isOrg = msg.sender === 'organizer';
+          return `
+            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+              <div class="flex items-baseline mb-1"><span class="text-sm font-bold text-gray-600 mr-2">${eHTML(msg.name)}</span><span class="text-xs text-gray-400">${msg.time}</span></div>
+              <div class="max-w-[80%] p-3 md:p-4 rounded-2xl text-base md:text-lg ${isMe ? 'bg-[#E67E22] text-white rounded-tr-none' : isOrg ? 'bg-[#4A5D4E] text-white rounded-tl-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}">${eHTML(msg.text)}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="flex flex-col h-[100vh] max-w-3xl mx-auto bg-gray-50">
+            <div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center shadow-sm z-10 shrink-0">
+               <button onclick="history.back()" class="p-2 -ml-2 text-gray-500 hover:text-gray-800"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+               <div class="ml-2 flex-1 min-w-0">
+                 <div class="flex items-center text-xs font-bold text-[#E67E22] mb-1"><span class="bg-[#E67E22] text-white px-2 py-0.5 rounded mr-2">参加者限定</span></div>
+                 <h2 class="text-base md:text-lg font-bold text-gray-800 truncate">${eHTML(event.title)}</h2>
+               </div>
+            </div>
+            <div class="bg-emerald-50 border-b border-emerald-100 p-3 shrink-0 flex items-start text-sm">
+               <i data-lucide="info" class="w-5 h-5 text-[#4A5D4E] mr-2 shrink-0 mt-0.5"></i>
+               <p class="text-gray-700">主催者からのお知らせ: 当日は<span class="font-bold">「${eHTML(event.meetingPlace)}」</span>に直接お集まりください。</p>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+              <div class="text-center text-sm text-gray-400 my-4">チャットが開始されました</div>
+              ${msgs}
+            </div>
+            <div class="bg-white border-t border-gray-200 p-3 md:p-4 shrink-0 pb-safe">
+              <form onsubmit="app.handleChatSubmit(event)" class="flex items-end gap-2">
+                <textarea id="chatInput" oninput="document.getElementById('chatSubmitBtn').disabled = !this.value.trim()" class="flex-1 max-h-32 min-h-[48px] md:min-h-[52px] p-2 md:p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E67E22] outline-none resize-none text-base md:text-lg" placeholder="メッセージを入力..." rows="1" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); app.handleChatSubmit(event);}"></textarea>
+                <button id="chatSubmitBtn" type="submit" disabled class="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 bg-[#4A5D4E] text-white rounded-full flex items-center justify-center disabled:opacity-50"><i data-lucide="send" class="w-4 h-4 md:w-5 md:h-5 ml-1"></i></button>
+              </form>
+            </div>
           </div>
         `;
       },
@@ -698,60 +746,210 @@
         const pastEvents = this.state.events.filter(e => new Date(e.date) < new Date() && (this.state.myApplications.includes(e.id) || e.organizerId === user.id));
         const isFollowing = this.state.currentUser?.following.includes(user.id);
 
-        let userHtml = '';
-        if (isEditing) {
-          userHtml = `
+        let userHtml = isEditing ? `
             <div class="space-y-4 w-full">
-              <div><label class="text-xs font-bold text-gray-500 block mb-1">ユーザー名 *</label><input id="pe_name" required type="text" class="w-full p-3 border border-gray-300 rounded-lg font-bold text-gray-800 focus:ring-2 focus:ring-[#E67E22] outline-none bg-white" value="${eHTML(user.name)}"></div>
-              <div><label class="text-xs font-bold text-gray-500 block mb-1">自己紹介</label><textarea id="pe_bio" rows="4" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-[#E67E22] outline-none bg-white">${eHTML(user.bio)}</textarea></div>
-              <div class="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
-                <button onclick="app.handleProfileSubmit()" class="font-bold rounded-lg py-2 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] text-sm">保存する</button>
-                <button onclick="app.state.isEditingProfile=false; app.render()" class="font-bold rounded-lg py-2 px-6 border-2 border-[#4A5D4E] text-[#4A5D4E] hover:bg-slate-50 text-sm">キャンセル</button>
+              <div><label class="text-xs font-bold text-gray-500 block mb-1">ユーザー名 *</label><input id="pe_name" required type="text" class="w-full p-3 border border-gray-300 rounded-lg font-bold text-gray-800 outline-none" value="${eHTML(user.name)}"></div>
+              <div><label class="text-xs font-bold text-gray-500 block mb-1">自己紹介</label><textarea id="pe_bio" rows="4" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 outline-none">${eHTML(user.bio)}</textarea></div>
+              <div class="flex gap-3 pt-2">
+                <button onclick="app.handleProfileSubmit()" class="font-bold rounded-lg py-2 px-6 bg-[#E67E22] text-white hover:bg-[#d67118] text-sm">保存</button>
+                <button onclick="app.state.isEditingProfile=false; app.render()" class="font-bold rounded-lg py-2 px-6 border-2 border-[#4A5D4E] text-[#4A5D4E] text-sm">キャンセル</button>
               </div>
-            </div>
-          `;
-        } else {
-          userHtml = `
+            </div>` : `
             <div class="w-full">
               <h2 class="text-2xl font-bold text-gray-800 mb-2">${eHTML(user.name)}</h2>
               <div class="flex justify-center md:justify-start gap-6 text-gray-600 mb-4 font-bold"><span>フォロー <span class="text-xl text-gray-800">${user.following.length}</span></span><span>フォロワー <span class="text-xl text-gray-800">${user.followers.length}</span></span></div>
               <p class="text-gray-700 whitespace-pre-wrap">${eHTML(user.bio)}</p>
-              ${isMyPage ? `<div class="mt-5"><button onclick="app.state.isEditingProfile=true; app.render()" class="flex items-center mx-auto md:mx-0 text-[#4A5D4E] font-bold text-sm bg-emerald-50 px-4 py-2 rounded-full hover:bg-emerald-100 transition-colors"><i data-lucide="edit" class="w-4 h-4 mr-1"></i> プロフィールを編集</button></div>` 
-                         : `<div class="mt-6"><button onclick="app.toggleFollow('${user.id}')" class="font-bold rounded-lg py-3 px-8 flex items-center justify-center text-lg ${isFollowing ? 'border-2 border-gray-300 text-gray-600 hover:bg-gray-100' : 'bg-[#E67E22] text-white hover:bg-[#d67118]'}"><i data-lucide="heart" class="w-5 h-5 mr-2 ${isFollowing ? 'fill-gray-400 text-gray-400' : ''}"></i> ${isFollowing ? 'フォロー中' : 'フォローする'}</button></div>`}
-            </div>
-          `;
-        }
-
-        const renderEventList = (eventsList, noText) => eventsList.length > 0 ? `<div class="space-y-4 mb-8">` + eventsList.map(ev => `
-          <div class="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4">
-            ${noText.includes('予定') ? `<div class="w-16 h-16 bg-emerald-50 rounded-lg flex flex-col items-center justify-center text-[#4A5D4E] shrink-0"><span class="text-xs font-bold">${ev.date.split('-')[1]}月</span><span class="text-xl font-bold leading-none">${ev.date.split('-')[2]}</span></div>`
-                                     : `<img src="${ev.imageUrl}" class="w-16 h-16 rounded-lg object-cover shrink-0" />`}
-            <div class="flex-1 min-w-0"><p class="font-bold text-gray-800 truncate">${eHTML(ev.title)}</p><p class="text-sm text-gray-500 truncate">${ev.date}</p></div>
-          </div>`).join('') + `</div>` : `<p class="text-gray-500 mb-8">${noText}</p>`;
+              ${isMyPage ? `<div class="mt-5"><button onclick="app.state.isEditingProfile=true; app.render()" class="flex items-center mx-auto md:mx-0 text-[#4A5D4E] font-bold text-sm bg-emerald-50 px-4 py-2 rounded-full hover:bg-emerald-100"><i data-lucide="edit" class="w-4 h-4 mr-1"></i> 編集</button></div>` 
+                         : `<div class="mt-6"><button onclick="app.toggleFollow('${user.id}')" class="font-bold rounded-lg py-3 px-8 flex items-center justify-center text-lg w-full md:w-auto ${isFollowing ? 'border-2 border-gray-300 text-gray-600' : 'bg-[#E67E22] text-white'}"><i data-lucide="heart" class="w-5 h-5 mr-2 ${isFollowing ? 'fill-gray-400' : ''}"></i> ${isFollowing ? 'フォロー中' : 'フォローする'}</button></div>`}
+            </div>`;
 
         return `
           <div class="max-w-3xl mx-auto px-4 py-8">
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 relative">
               ${isMyPage && !isEditing ? `<button onclick="app.handleLogout()" class="absolute top-6 right-6 text-gray-500 hover:text-red-500 flex items-center text-sm font-bold"><i data-lucide="log-out" class="w-4 h-4 mr-1"></i> ログアウト</button>` : ''}
               <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div class="shrink-0 flex flex-col items-center w-full md:w-auto">
                   <img src="${user.avatarUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-100" />
-                  ${isEditing ? `<div class="mt-4 w-full max-w-[200px]"><label class="text-xs font-bold text-gray-500 block mb-1">画像URL</label><input id="pe_avatarUrl" type="text" class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E67E22] outline-none bg-white" value="${eHTML(user.avatarUrl)}"></div>` : ''}
+                  ${isEditing ? `<div class="mt-4 w-full max-w-[200px]"><input id="pe_avatarUrl" type="text" class="w-full p-2 text-sm border border-gray-300 rounded-lg" value="${eHTML(user.avatarUrl)}" placeholder="画像URL"></div>` : ''}
                 </div>
                 ${userHtml}
               </div>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">参加予定のイベント</h3>
-            ${renderEventList(upcomingEvents, '参加予定のイベントはありません。')}
+            ${upcomingEvents.length > 0 ? `<div class="space-y-4 mb-8">`+upcomingEvents.map(ev=>`<div onclick="app.navigate('detail','${ev.id}')" class="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-sm"><div class="w-16 h-16 bg-emerald-50 rounded-lg flex flex-col items-center justify-center text-[#4A5D4E] shrink-0"><span class="text-xs font-bold">${ev.date.split('-')[1]}月</span><span class="text-xl font-bold leading-none">${ev.date.split('-')[2]}</span></div><div class="flex-1 min-w-0"><p class="font-bold text-gray-800 truncate">${eHTML(ev.title)}</p><p class="text-sm text-gray-500 truncate">${ev.location} / ${ev.time}</p></div></div>`).join('')+`</div>` : `<p class="text-gray-500 mb-8">参加予定のイベントはありません。</p>`}
             <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">参加したイベント履歴</h3>
-            <div class="opacity-75">${renderEventList(pastEvents, '過去に参加したイベントはありません。')}</div>
+            <div class="opacity-75">${pastEvents.length > 0 ? `<div class="space-y-4">`+pastEvents.map(ev=>`<div onclick="app.navigate('detail','${ev.id}')" class="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-sm"><img src="${ev.imageUrl}" class="w-16 h-16 rounded-lg object-cover shrink-0" /><div class="flex-1 min-w-0"><p class="font-bold text-gray-800 truncate">${eHTML(ev.title)}</p><p class="text-sm text-gray-500">${ev.date}</p></div></div>`).join('')+`</div>` : `<p class="text-gray-500">過去に参加したイベントはありません。</p>`}</div>
           </div>
         `;
-      }
+      },
+
+      renderFeaturePage(featureId) {
+        const feature = FEATURE_PAGES[featureId];
+        if (!feature) return '';
+        
+        const spotsHtml = feature.spots.map(spot => `
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6">
+            <div class="flex-1">
+              <h4 class="text-xl font-bold text-[#2C3E50] mb-2">${eHTML(spot.name)}</h4>
+              <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-3 font-bold">
+                <span class="flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-1 text-[#4A5D4E]"></i>${eHTML(spot.location)}</span>
+                <span class="flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-1 text-[#E67E22]"></i>シーズン：${eHTML(spot.season)}</span>
+              </div>
+              <p class="text-gray-700 leading-relaxed mb-4">${eHTML(spot.description)}</p>
+              <a href="${spot.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-[#E67E22] hover:text-[#d67118] font-bold text-sm border border-[#E67E22] px-4 py-2 rounded-full hover:bg-orange-50 transition-colors">公式サイトを見る <i data-lucide="external-link" class="w-4 h-4 ml-1"></i></a>
+            </div>
+          </div>
+        `).join('');
+
+        return `
+          <div class="pb-24 max-w-3xl mx-auto px-4 mt-6">
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
+            
+            <div class="bg-gradient-to-r from-[#4A5D4E] to-[#2C3E50] text-white p-8 rounded-2xl mb-8 shadow-sm relative overflow-hidden">
+              <div class="relative z-10">
+                <span class="bg-[#E67E22] text-white px-3 py-1 rounded-full text-sm font-bold mb-4 inline-block">特集</span>
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 leading-tight">${eHTML(feature.title)}</h2>
+                <p class="text-lg opacity-90">${eHTML(feature.description)}</p>
+              </div>
+              <div class="absolute -right-10 -bottom-10 opacity-10">
+                <i data-lucide="star" class="w-48 h-48"></i>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              ${spotsHtml}
+            </div>
+            
+            <div class="mt-10 text-center">
+              <button onclick="app.authNavigate('create')" class="font-bold rounded-lg py-4 px-8 bg-[#E67E22] text-white hover:bg-[#d67118] shadow-md text-lg inline-flex items-center">
+                <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> このスポットへ行くイベントを作る
+              </button>
+            </div>
+          </div>
+        `;
+      },
+
+      // --- 静的・汎用ページ群 ---
+      renderStaticPage(title, contentHtml) {
+        return `
+          <div class="pb-24 max-w-3xl mx-auto px-4 mt-6">
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-[#4A5D4E] pb-2 inline-block">${title}</h2>
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 space-y-6 text-gray-700 leading-loose">
+              ${contentHtml}
+            </div>
+          </div>
+        `;
+      },
+
+      renderContactPage() {
+        return `
+          <div class="pb-24 max-w-2xl mx-auto px-4 mt-6">
+            <button onclick="history.back()" class="flex items-center text-gray-500 font-bold hover:text-gray-800 py-2 mb-4"><i data-lucide="chevron-left" class="w-6 h-6 mr-1"></i> 戻る</button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-[#4A5D4E] pb-2 inline-block">お問い合わせ</h2>
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+              <p class="mb-6 text-gray-600">以下のフォームに入力し、「メールを作成する」ボタンを押すと、お使いのメールソフトが起動します。</p>
+              <form action="mailto:humanlink725@gmail.com" method="GET" enctype="text/plain">
+                <input type="hidden" name="subject" value="【定年前の趣味友準備室】お問い合わせ">
+                <label class="block text-lg font-bold text-gray-800 mb-2 mt-4">お問い合わせ種別</label>
+                <select name="body" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#4A5D4E] outline-none bg-white mb-6">
+                  <option value="[種別] イベントに関する質問">[種別] イベントに関する質問</option>
+                  <option value="[種別] システムトラブル">[種別] システムトラブル</option>
+                  <option value="[種別] 違反報告">[種別] 違反報告</option>
+                  <option value="[種別] 退会について">[種別] 退会について</option>
+                  <option value="[種別] その他">[種別] その他</option>
+                </select>
+                <label class="block text-lg font-bold text-gray-800 mb-2">詳細内容</label>
+                <textarea name="body" rows="6" required class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-[#4A5D4E] outline-none mb-8" placeholder="※上記で選んだ「種別」のあとに、お問い合わせ内容を詳しくご記入ください。メールソフト起動後に追記・修正していただくことも可能です。"></textarea>
+                <button type="submit" class="w-full font-bold rounded-lg py-4 px-6 bg-[#4A5D4E] text-white hover:bg-[#3d4d40] shadow-md text-xl">メールを作成する</button>
+              </form>
+            </div>
+          </div>
+        `;
+      },
+
+      // --- 各種テキストコンテンツ ---
+      getAboutContent() {
+        return `
+          <h3 class="text-xl font-bold text-[#2C3E50] border-b border-gray-100 pb-2 mt-4">「定年前の趣味友準備室」とは</h3>
+          <p>50代・60代から始める、同世代の落ち着いた趣味コミュニティです。街歩き、美術館巡り、食べ歩きなど、共通の趣味を通じて、無理のないペースで新しいつながりを作ることを目的としています。</p>
+          <h3 class="text-xl font-bold text-[#2C3E50] border-b border-gray-100 pb-2 mt-8">参加の流れ</h3>
+          <ol class="list-decimal pl-6 space-y-3 font-bold text-gray-800">
+            <li>イベントを探す<br><span class="font-normal text-gray-600">トップページから、興味のあるカテゴリや日程でイベントを探します。</span></li>
+            <li>参加を申し込む<br><span class="font-normal text-gray-600">イベント詳細を確認し、「参加する」ボタンから申し込みます（無料会員登録が必要です）。</span></li>
+            <li>チャットで挨拶<br><span class="font-normal text-gray-600">申し込みが完了すると、参加者限定チャットが利用できます。当日までにご挨拶や確認をしておきましょう。</span></li>
+            <li>当日楽しむ<br><span class="font-normal text-gray-600">指定された集合場所に集まり、共通の趣味を楽しみましょう！</span></li>
+          </ol>
+          <div class="bg-red-50 p-4 rounded-lg mt-8 text-red-700">
+            <h4 class="font-bold flex items-center mb-2"><i data-lucide="info" class="w-5 h-5 mr-1"></i> 安心・安全のためのルール</h4>
+            <p class="text-sm">当サイトでは、<strong>出会い目的（恋愛・婚活等）や、営業・宗教等の勧誘目的での利用を固く禁止</strong>しております。純粋に趣味を楽しむ場としてご利用ください。</p>
+          </div>
+        `;
+      },
+      getFaqContent() {
+        return `
+          <div class="space-y-6">
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>一人参加でも大丈夫ですか？</h4><p class="pl-3 mt-2">はい、ほとんどの方がお一人での参加です。少人数制のイベントも多いため、すぐに打ち解けられます。</p></div>
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>どの年代が多いですか？</h4><p class="pl-3 mt-2">50代〜60代の方が中心です。同世代ならではの話題で会話が弾むと好評です。</p></div>
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>キャンセルはできますか？</h4><p class="pl-3 mt-2">はい、可能です。参加枠をお待ちの方もいるため、<strong>できるだけ24時間前までに</strong>キャンセルの手続きをお願いします。やむを得ず直前になる場合は、必ず参加者チャットで主催者へご報告ください。</p></div>
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>雨の日はどうなりますか？</h4><p class="pl-3 mt-2">イベント詳細ページの「注意事項」をご確認ください。「雨天決行」「少雨決行」「雨天中止」などの記載があります。前日や当日にチャットでお知らせがある場合もございます。</p></div>
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>主催者になるにはどうすればいいですか？</h4><p class="pl-3 mt-2">会員登録を済ませた方なら、どなたでも「イベントを作る」ボタンから無料でイベントを企画・公開することができます。</p></div>
+            <div><h4 class="font-bold text-lg text-[#2C3E50] bg-gray-50 p-3 rounded-lg flex"><span class="text-[#E67E22] mr-2">Q.</span>イベントの料金設定はどうすればいいですか？</h4><p class="pl-3 mt-2">初めての方は、気軽に参加しやすい<strong>「無料（各自実費）」</strong>をお勧めしています。専門的なガイドを行う場合や、事前の準備・大人数をまとめる手間がかかる場合は、参加費として500〜1,000円程度を設定される方もいらっしゃいます。</p></div>
+          </div>
+        `;
+      },
+      getGuideOrganizerContent() {
+        return `
+          <h3 class="text-xl font-bold text-[#2C3E50] border-b border-gray-100 pb-2 mt-4">開催の流れ</h3>
+          <ol class="list-decimal pl-6 space-y-3 text-gray-800">
+            <li><strong>企画・公開:</strong> 「イベントを作る」から、日時・場所・内容を入力して公開します。</li>
+            <li><strong>参加者の受付:</strong> 申し込みがあると通知が届きます。</li>
+            <li><strong>チャットで案内:</strong> 開催が近づいたら、集合場所の目印（例：「青い帽子をかぶっています」など）をチャットで伝えましょう。</li>
+            <li><strong>当日:</strong> 参加者と合流し、無理のないペースでイベントを楽しみます。</li>
+          </ol>
+          <h3 class="text-xl font-bold text-[#2C3E50] border-b border-gray-100 pb-2 mt-8">掲載ルールと禁止事項</h3>
+          <p>誰もが安心して参加できるコミュニティを維持するため、以下の行為を禁止します。</p>
+          <ul class="list-disc pl-6 space-y-2 mt-2">
+            <li>営利目的の過度な営業、情報商材の販売</li>
+            <li>ネットワークビジネス（MLM）や宗教等への勧誘</li>
+            <li>恋愛・婚活を主目的としたイベントの開催</li>
+            <li>参加者の安全を脅かす可能性のある企画</li>
+          </ul>
+          <h3 class="text-xl font-bold text-[#2C3E50] border-b border-gray-100 pb-2 mt-8">手数料について</h3>
+          <p>現在、イベントの作成・公開およびシステムの利用にかかる<strong>手数料は一切無料</strong>です。</p>
+        `;
+      },
+      getTermsContent() { return `<h3>第1条（適用）</h3><p>本規約は、ユーザーと当サイトとの間のサービスの利用に関わる一切の関係に適用されます。</p><h3>第2条（禁止事項）</h3><p>ユーザーは、本サービスの利用にあたり、以下の行為をしてはなりません。<br>1. 法令または公序良俗に違反する行為<br>2. 犯罪行為に関連する行為<br>3. 営利目的の勧誘、宗教活動、ネットワークビジネスへの勧誘<br>4. 恋愛・交際を主目的とした利用<br>5. 他のユーザーに迷惑をかける行為</p><h3>第3条（免責事項）</h3><p>当サイトは、ユーザー間またはユーザーと第三者との間において生じたトラブル、損害について、一切の責任を負わないものとします。</p>`; },
+      getPrivacyContent() { return `<h3>1. 個人情報の収集</h3><p>当サイトは、ユーザーが登録する際に入力する氏名、メールアドレスなどの個人情報を収集します。</p><h3>2. 個人情報の利用目的</h3><p>収集した個人情報は、サービスの提供、ユーザーサポート、不正利用の防止のために利用します。</p><h3>3. 第三者提供</h3><p>当サイトは、法令に基づく場合を除き、あらかじめユーザーの同意を得ることなく、第三者に個人情報を提供することはありません。</p>`; }
     };
 
+    // --- History API (ブラウザバック) 連携 ---
+    window.addEventListener('popstate', (e) => {
+      if (e.state) {
+        window.app.state.currentPage = e.state.page;
+        window.app.state.currentEventId = e.state.id;
+        window.app.state.targetUserId = e.state.targetUserId;
+        window.app.state.isMobileMenuOpen = false;
+        window.app.render();
+      } else {
+        window.app.state.currentPage = 'top';
+        window.app.render();
+      }
+    });
+
     // 初期化
-    window.onload = () => window.app.render();
+    window.onload = () => {
+      // 初期URLのハッシュを解釈
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        const parts = hash.split('/');
+        window.app.navigate(parts[0], parts[1] || null, true);
+      } else {
+        history.replaceState({ page: 'top', id: null, targetUserId: null }, '', '');
+        window.app.render();
+      }
+    };
   </script>
 </body>
 </html>
